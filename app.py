@@ -7,6 +7,9 @@ st.set_page_config(page_title="Ahmed Bendrioua | Vis", layout="wide",page_icon="
 # st.session_state.theme="light"
 st.markdown("""
         <style>
+                .ea3mdgi8{background-color: #181818;}
+                .e1b2p2ww15{background-color: rgb(81 81 87);}
+                .st-emotion-cache-19rxjzo{background-color: rgb(40 40 40);}
                 .ezrtsby2{display:none;}
                 summary{display:none;}
                 .e1nzilvr3{display:none}
