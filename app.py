@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-st.set_page_config(page_title="Page Title", layout="wide")
+st.set_page_config(page_title="Ahmed Bendrioua | Vis", layout="wide",page_icon="favicon.png",theme="light")
 # st.session_state.theme="light"
 st.markdown("""
         <style>
