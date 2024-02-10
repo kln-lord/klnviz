@@ -2,14 +2,18 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import streamlit.config
 
 st.set_page_config(page_title="Ahmed Bendrioua | Vis", layout="wide",page_icon="favicon.png")
 # st.session_state.theme="light"
+streamlit.config.set_option("theme.base","light")
+streamlit.config.set_option('server.enableXsrfProtection', False)
+streamlit.config.set_option('server.enableCORS', False)
+# .ea3mdgi8{background-color: #181818;}
+#                 .e1b2p2ww15{background-color: rgb(81 81 87);}
+#                 .st-emotion-cache-19rxjzo{background-color: rgb(40 40 40);}
 st.markdown("""
         <style>
-                .ea3mdgi8{background-color: #181818;}
-                .e1b2p2ww15{background-color: rgb(81 81 87);}
-                .st-emotion-cache-19rxjzo{background-color: rgb(40 40 40);}
                 .ezrtsby2{display:none;}
                 summary{display:none;}
                 .e1nzilvr3{display:none}
