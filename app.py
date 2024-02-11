@@ -55,6 +55,9 @@ if st.session_state['Submit']:
             df.info(buf=buffer)
             s = buffer.getvalue()
             st.text(s)
+            st.write("<h2>Duplicates in the data</h2>",unsafe_allow_html=True)
+            if df_num.duplicated().sum()==0: st.write(f"there are no Duplicates in the data") 
+            else: st.write(f"{df_num.duplicated().sum()}")
             st.write("<h2>HeatMap<i> to show the correlation between the variables<i></h2>",unsafe_allow_html=True)
             fig, ax = plt.subplots()
             sns.heatmap(df_num.corr(), ax=ax,annot=True)
@@ -90,6 +93,9 @@ if st.session_state['Submit']:
                 var.append(column_1)
                 for column_2 in df_num.columns:
                     if column_2 not in var:
+                        # fig, ax = plt.subplots()
+                        # sns.scatterplot(df_num,x=str(column_1),y=str(column_2), ax=ax,annot=True)
+                        # st.write(fig)
                         st.scatter_chart(df_num,x=column_1,y=column_2,color=colors[random.randint(0,len(colors))-1])
                         i+=1
             st.header("Let us filter your data!")
@@ -102,6 +108,26 @@ if st.session_state['Submit']:
                 else:
                     st.header(f"Compute pairwise correlation of {target_variable} and the other columns")
                     st.write(df_num.corr()[target_variable])
+                    stat,stat1=False,False
+                    val = {df_num.corr()[target_variable].index[i]: df_num.corr()[target_variable].values[i] for i in range(len(df_num.corr()[target_variable].values))}
+                    # st.write(val)
+                    for key,value in val.items():
+                        if abs(value)<=0.2:
+                            stat=True
+                            st.info(f"we notice that there isn't a significant correlation between {key} and {target_variable} : {value} therefor the entry variable {key} doesn't explain the target variable")
+                            val = {df_num.corr()[key].index[i]: df_num.corr()[key].values[i] for i in range(len(df_num.corr()[key].values))}
+                            for key_sub,value1 in val.items():
+                                if key!=key_sub and abs(value1)>=0.4:
+                                    stat1=True
+                            if stat1:
+                                st.header(f"Compute pairwise correlation of {key} and the other columns")
+                                st.write(df_num.corr()[key])
+                                st.info(f"there is significant correlation between {key} and {key_sub} : {value1} which means that the two entry variables contain same information so it's perferable to remove {key}")
+
+
+                    if not stat:
+                        st.write("all variables explain the target value")
+
         else:
             error_msg = "files of type "+ uploaded_file.type +" are not supported"
             st.error(error_msg)
@@ -110,6 +136,8 @@ if st.session_state['Submit']:
         st.error('Load your data first !!')
 else:
     st.info('Load your data')
+
+# if st.session_state["Send"]:
 
     
 st.write("""
