@@ -118,12 +118,12 @@ st.write("""
         </footer>          
             """,unsafe_allow_html=True)
 
-st.write(
-    f"""
-    ## Session state:
-    {st.session_state["Submit"]=}
+# st.write(
+#     f"""
+#     ## Session state:
+#     {st.session_state["Submit"]=}
 
-    {st.session_state["Send"]=}
+#     {st.session_state["Send"]=}
 
-    """
-)
+#     """
+# )
