@@ -1,4 +1,5 @@
 import io
+import operator
 import streamlit as st
 import pandas as pd
 import matplotlib
@@ -28,7 +29,7 @@ st.markdown("""
 st.title('Vis - visualize and discover the story behind your data with one click')
 st.write('<h6>Made by Ahmed Bendrioua</h6>',unsafe_allow_html=True)
 
-uploaded_file = st.file_uploader("Load your data",accept_multiple_files=False)
+uploaded_file = st.file_uploader("Load your data",accept_multiple_files=False,type=["csv", "json"])
 
 colors = [
                 "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
@@ -65,23 +66,43 @@ if st.button('Submit'):
 
 if st.session_state['Submit']:
     if uploaded_file is not None:
-        if uploaded_file.type == "text/csv":
+        if uploaded_file.type in  ["text/csv","application/json"]:
+            # success upload message
             st.success("data uploaded succefully")
-            df = pd.read_csv(uploaded_file)
+            # reading data
+            if uploaded_file.type=="text/csv": df = pd.read_csv(uploaded_file)
+            else: df = pd.read_json(uploaded_file)
+            # displaying data
             st.write("<h2> your data : "+uploaded_file.name+"</h2>",unsafe_allow_html=True)
             st.write(df)
-            object_columns=[column for column in df.columns if df[column].dtype=='object']
+            # droping non numirecal columns
+            object_columns=[column for column in df.columns if df[column].dtype in ['object','datetime64[ns, UTC]']]
             df_num = df.drop(columns=object_columns)
+            #desc
             st.write("<h2>Description of the data</h2>",unsafe_allow_html=True)
             st.write(df.describe())
+            #infos
             st.write("<h2>informations about the data</h2>",unsafe_allow_html=True)
             buffer = io.StringIO()
             df.info(buf=buffer)
             s = buffer.getvalue()
             st.text(s)
+            if operator.countOf(df_num.isna().sum().values,0) != len(df_num.isna().sum().values):
+                st.header(f"deleting rows with missing values..")
+                st.write(pd.DataFrame(df_num.isna().sum()).rename(columns={0:"Number of missing values"}))
+                df_num = df_num.dropna(how="any")
+                st.header("the data after modification : ")
+                st.write(df_num)
+                if len(df_num)==0:
+                    exit(0)
+            #dup
             st.write("<h2>Duplicates in the data</h2>",unsafe_allow_html=True)
             if df_num.duplicated().sum()==0: st.write(f"there are no Duplicates in the data") 
-            else: st.write(f"{df_num.duplicated().sum()}")
+            else: 
+                st.write(f"{df_num.duplicated().sum()}")
+                df_num = df_num.drop_duplicates()
+                st.header("the data after modification : ")
+                st.write(df_num)
             st.header("Bar chart plots of the data")
             st.bar_chart(df_num)
             for column in df_num.columns: 
