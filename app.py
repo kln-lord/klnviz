@@ -1,3 +1,4 @@
+import io
 import streamlit as st
 import pandas as pd
 import matplotlib
@@ -5,6 +6,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import streamlit.config
 from itertools import combinations
+import random
 
 st.set_page_config(page_title="Ahmed Bendrioua | Vis", layout="wide",page_icon="favicon.png")
 # st.session_state.theme="light"
@@ -28,7 +30,17 @@ st.write('<h6>Made by Ahmed Bendrioua</h6>',unsafe_allow_html=True)
 
 uploaded_file = st.file_uploader("Load your data",accept_multiple_files=False)
 
+if "Submit" not in st.session_state:
+    st.session_state["Submit"] = False
+
+if "Send" not in st.session_state:
+    st.session_state["Send"] = False
+
+target_variable=""
 if st.button('Submit'):
+    st.session_state["Submit"] = not st.session_state["Submit"]
+
+if st.session_state['Submit']:
     if uploaded_file is not None:
         if uploaded_file.type == "text/csv":
             df = pd.read_csv(uploaded_file)
@@ -36,34 +48,82 @@ if st.button('Submit'):
             st.write(df)
             object_columns=[column for column in df.columns if df[column].dtype=='object']
             df_num = df.drop(columns=object_columns)
-            st.write("<h2>DESCRIBE</h2>",unsafe_allow_html=True)
+            st.write("<h2>Description of the data</h2>",unsafe_allow_html=True)
             st.write(df.describe())
+            st.write("<h2>informations about the data</h2>",unsafe_allow_html=True)
+            buffer = io.StringIO()
+            df.info(buf=buffer)
+            s = buffer.getvalue()
+            st.text(s)
             st.write("<h2>HeatMap<i> to show the correlation between the variables<i></h2>",unsafe_allow_html=True)
             fig, ax = plt.subplots()
             sns.heatmap(df_num.corr(), ax=ax,annot=True)
             st.write(fig)
+            st.write("<h2>Computing pairwise correlation of columns</h2>",unsafe_allow_html=True)
+            st.write(df_num.corr())
             st.write("<h2>SCATTER PLOT</h2>",unsafe_allow_html=True)
             var = list()
-            colors = ['#FAEBD7', '#00FFFF', '#7FFFD4', '#F5F5DC', '#FFE4C4', '#000000', '#0000FF', '#8A2BE2', '#A52A2A', '#DEB887', '#5F9EA0', '#7FFF00', '#D2691E', '#FF7F50', '#6495ED', '#DC143C', '#00008B', '#008B8B', '#B8860B', '#A9A9A9', '#006400', '#BDB76B', '#8B008B', '#556B2F', '#FF8C00', '#9932CC', '#8B0000', '#E9967A', '#8FBC8F', '#483D8B', '#2F4F4F', '#00CED1', '#9400D3', '#FF1493', '#00BFFF', '#696969', '#1E90FF', '#B22222', '#228B22', '#FF00FF', '#DCDCDC', '#FFD700', '#DAA520', '#808080', '#008000', '#ADFF2F', '#FF69B4', '#CD5C5C', '#4B0082', '#F0E68C', '#E6E6FA', '#FFF0F5', '#7CFC00', '#FFFACD', '#ADD8E6', '#F08080', '#FAFAD2', '#90EE90', '#D3D3D3', '#FFB6C1', '#FFA07A', '#20B2AA', '#87CEFA', '#778899', '#B0C4DE', '#FFFFE0', '#00FF00', '#32CD32', '#FAF0E6', '#800000', '#66CDAA', '#0000CD', '#BA55D3', '#9370DB', '#3CB371', '#7B68EE', '#00FA9A', '#48D1CC', '#C71585', '#191970', '#F5FFFA', '#FFE4E1', '#FFE4B5', '#FFDEAD', '#000080', '#FDF5E6', '#808000', '#6B8E23', '#FFA500', '#FF4500', '#DA70D6', '#EEE8AA', '#98FB98', '#AFEEEE', '#DB7093', '#FFEFD5', '#FFDAB9', '#CD853F', '#FFC0CB', '#DDA0DD', '#B0E0E6', '#800080', '#663399', '#FF0000', '#BC8F8F', '#4169E1', '#8B4513', '#FA8072', '#F4A460', '#2E8B57', '#FFF5EE', '#A0522D', '#C0C0C0', '#87CEEB', '#6A5ACD', '#708090', '#FFFAFA', '#00FF7F', '#4682B4', '#D2B48C', '#008080', '#D8BFD8', '#FF6347', '#40E0D0', '#EE82EE', '#F5DEB3']
-
+            colors = [
+                "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
+                "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf",
+                "#b3e1ff", "#ffdb58", "#aaf0d1", "#f88379", "#9fb6cd",
+                "#ffb3ff", "#ff6347", "#8b3a3a", "#4876ff", "#7b68ee",
+                "#b0c4de", "#c71585", "#00ff00", "#ffd700", "#ff7f50",
+                "#ff69b4", "#ffc0cb", "#800000", "#3cb371", "#4682b4",
+                "#afeeee", "#db7093", "#ff00ff", "#ba55d3", "#9370db",
+                "#ffdab9", "#ffa07a", "#dda0dd", "#da70d6", "#ff4500",
+                "#ff6347", "#ff8c00", "#ff69b4", "#ff1493", "#ff00ff",
+                "#ff0000", "#ee82ee", "#e9967a", "#e0ffff", "#e0e0e0",
+                "#deb887", "#d2b48c", "#d8bfd8", "#d8bfd8", "#cd5c5c",
+                "#c71585", "#b8860b", "#b0e0e6", "#b0c4de", "#a52a2a",
+                "#a9a9a9", "#8fbc8f", "#7fffd4", "#7fff00", "#7cfc00",
+                "#708090", "#6b8e23", "#6495ed", "#5f9ea0", "#556b2f",
+                "#4682b4", "#2e8b57", "#228b22", "#20b2aa", "#191970",
+                "#00ffff", "#00ff7f", "#00ff00", "#00ced1", "#008080",
+                "#008000", "#006400", "#0000ff", "#0000cd", "#000080",
+                "#fffff0", "#ffffe0", "#ffff00", "#ffdead", "#ffd700",
+                "#ff4500", "#ff1493", "#ee82ee", "#eedd82", "#e9967a",
+                "#e6e6fa", "#e0ffff", "#e0e0e0", "#db7093", "#d8bfd8"
+            ]
             i=0
             for column_1 in df_num.columns:
                 var.append(column_1)
                 for column_2 in df_num.columns:
                     if column_2 not in var:
-                        st.scatter_chart(df_num,x=column_1,y=column_2,color=colors[i])
+                        st.scatter_chart(df_num,x=column_1,y=column_2,color=colors[random.randint(0,len(colors))-1])
                         i+=1
+            st.header("Let us filter your data!")
+            target_variable = st.text_input("Enter your target variable","")
+            if st.button("Send"):
+                st.session_state["Send"] = not st.session_state["Send"]
+                if target_variable not in df.columns:
+                    error_msg = "the variable " +target_variable +" doesn't exist in the data, try again"
+                    st.error(error_msg)
+                else:
+                    st.header(f"Compute pairwise correlation of {target_variable} and the other columns")
+                    st.write(df_num.corr()[target_variable])
         else:
             error_msg = "files of type "+ uploaded_file.type +" are not supported"
             st.error(error_msg)
 
     else:
         st.error('Load your data first !!')
-
 else:
     st.info('Load your data')
-    st.write("""
-            <footer class="frame frame--footer" style="display:none;">
-                <p class="frame__author"><span>Made by <a target="_blank" href="https://www.linkedin.com/in/ahmedbendrioua/">@ahmedbendrioua</a></span> <span><a target="_blank" href="mailto:ahmedbendriouaa@gmail.com">Hire Me</a></span></p>
-            </footer>          
-             """,unsafe_allow_html=True)
+
+    
+st.write("""
+        <footer class="frame frame--footer" style="display:none;">
+            <p class="frame__author"><span>Made by <a target="_blank" href="https://www.linkedin.com/in/ahmedbendrioua/">@ahmedbendrioua</a></span> <span><a target="_blank" href="mailto:ahmedbendriouaa@gmail.com">Hire Me</a></span></p>
+        </footer>          
+            """,unsafe_allow_html=True)
+
+st.write(
+    f"""
+    ## Session state:
+    {st.session_state["Submit"]=}
+
+    {st.session_state["Send"]=}
+
+    """
+)
