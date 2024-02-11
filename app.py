@@ -30,43 +30,7 @@ st.write('<h6>Made by Ahmed Bendrioua</h6>',unsafe_allow_html=True)
 
 uploaded_file = st.file_uploader("Load your data",accept_multiple_files=False)
 
-if "Submit" not in st.session_state:
-    st.session_state["Submit"] = False
-
-if "Send" not in st.session_state:
-    st.session_state["Send"] = False
-
-target_variable=""
-if st.button('Submit'):
-    st.session_state["Submit"] = not st.session_state["Submit"]
-
-if st.session_state['Submit']:
-    if uploaded_file is not None:
-        if uploaded_file.type == "text/csv":
-            df = pd.read_csv(uploaded_file)
-            st.write("<h2> your data : "+uploaded_file.name+"</h2>",unsafe_allow_html=True)
-            st.write(df)
-            object_columns=[column for column in df.columns if df[column].dtype=='object']
-            df_num = df.drop(columns=object_columns)
-            st.write("<h2>Description of the data</h2>",unsafe_allow_html=True)
-            st.write(df.describe())
-            st.write("<h2>informations about the data</h2>",unsafe_allow_html=True)
-            buffer = io.StringIO()
-            df.info(buf=buffer)
-            s = buffer.getvalue()
-            st.text(s)
-            st.write("<h2>Duplicates in the data</h2>",unsafe_allow_html=True)
-            if df_num.duplicated().sum()==0: st.write(f"there are no Duplicates in the data") 
-            else: st.write(f"{df_num.duplicated().sum()}")
-            st.write("<h2>HeatMap<i> to show the correlation between the variables<i></h2>",unsafe_allow_html=True)
-            fig, ax = plt.subplots()
-            sns.heatmap(df_num.corr(), ax=ax,annot=True)
-            st.write(fig)
-            st.write("<h2>Computing pairwise correlation of columns</h2>",unsafe_allow_html=True)
-            st.write(df_num.corr())
-            st.write("<h2>SCATTER PLOT</h2>",unsafe_allow_html=True)
-            var = list()
-            colors = [
+colors = [
                 "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
                 "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf",
                 "#b3e1ff", "#ffdb58", "#aaf0d1", "#f88379", "#9fb6cd",
@@ -88,6 +52,54 @@ if st.session_state['Submit']:
                 "#ff4500", "#ff1493", "#ee82ee", "#eedd82", "#e9967a",
                 "#e6e6fa", "#e0ffff", "#e0e0e0", "#db7093", "#d8bfd8"
             ]
+
+if "Submit" not in st.session_state:
+    st.session_state["Submit"] = False
+
+if "Send" not in st.session_state:
+    st.session_state["Send"] = False
+
+target_variable=""
+if st.button('Submit'):
+    st.session_state["Submit"] = not st.session_state["Submit"]
+
+if st.session_state['Submit']:
+    if uploaded_file is not None:
+        if uploaded_file.type == "text/csv":
+            st.success("data uploaded succefully")
+            df = pd.read_csv(uploaded_file)
+            st.write("<h2> your data : "+uploaded_file.name+"</h2>",unsafe_allow_html=True)
+            st.write(df)
+            object_columns=[column for column in df.columns if df[column].dtype=='object']
+            df_num = df.drop(columns=object_columns)
+            st.write("<h2>Description of the data</h2>",unsafe_allow_html=True)
+            st.write(df.describe())
+            st.write("<h2>informations about the data</h2>",unsafe_allow_html=True)
+            buffer = io.StringIO()
+            df.info(buf=buffer)
+            s = buffer.getvalue()
+            st.text(s)
+            st.write("<h2>Duplicates in the data</h2>",unsafe_allow_html=True)
+            if df_num.duplicated().sum()==0: st.write(f"there are no Duplicates in the data") 
+            else: st.write(f"{df_num.duplicated().sum()}")
+            st.header("Bar chart plots of the data")
+            st.bar_chart(df_num)
+            for column in df_num.columns: 
+                st.header(f"{column} Bar chart")
+                st.bar_chart(df_num[column],y=column,color=colors[random.randint(0,len(colors))-1])
+            # fig, ax = plt.subplots()
+            # ax.hist(df_num['Population'],bins=500)
+            # st.pyplot(fig)
+            # st.data_editor(df,hide_index=True)
+            st.write("<h2>HeatMap<i> to show the correlation between the variables<i></h2>",unsafe_allow_html=True)
+            fig, ax = plt.subplots()
+            sns.heatmap(df_num.corr(), ax=ax,annot=True)
+            st.write(fig)
+            st.write("<h2>Computing pairwise correlation of columns</h2>",unsafe_allow_html=True)
+            st.write(df_num.corr())
+            st.write("<h2>SCATTER PLOT</h2>",unsafe_allow_html=True)
+            var = list()
+            
             i=0
             for column_1 in df_num.columns:
                 var.append(column_1)
