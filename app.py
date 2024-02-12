@@ -2,12 +2,12 @@ import io
 import operator
 import streamlit as st
 import pandas as pd
-import matplotlib
 import matplotlib.pyplot as plt
 import seaborn as sns
 import streamlit.config
 from itertools import combinations
 import random
+import plotly.express as px
 
 st.set_page_config(page_title="Ahmed Bendrioua | Vis", layout="wide",page_icon="favicon.png")
 # st.session_state.theme="light"
@@ -24,6 +24,7 @@ st.markdown("""
                 .e1nzilvr3{display:none}
                 .stAlert{background-color: #ababab;border-radius: 10px;}
                 .stAlert .e1nzilvr5{color:black;}
+                .plotlyjsicon{display:none;}
         </style>
 """,unsafe_allow_html=True)
 st.title('Vis - visualize and discover the story behind your data with one click')
@@ -103,34 +104,107 @@ if st.session_state['Submit']:
                 df_num = df_num.drop_duplicates()
                 st.header("the data after modification : ")
                 st.write(df_num)
-            st.header("Bar chart plots of the data")
-            st.bar_chart(df_num)
-            for column in df_num.columns: 
-                st.header(f"{column} Bar chart")
-                st.bar_chart(df_num[column],y=column,color=colors[random.randint(0,len(colors))-1])
+            # st.header("Bar chart of the data")
+            # st.bar_chart(df_num)
+            # for column in df_num.columns: 
+            #     st.header(f"{column} Bar chart")
+            #     st.bar_chart(df_num[column],y=column,color=colors[random.randint(0,len(colors))-1])
             # fig, ax = plt.subplots()
             # ax.hist(df_num['Population'],bins=500)
             # st.pyplot(fig)
             # st.data_editor(df,hide_index=True)
-            st.write("<h2>HeatMap<i> to show the correlation between the variables<i></h2>",unsafe_allow_html=True)
-            fig, ax = plt.subplots()
-            sns.heatmap(df_num.corr(), ax=ax,annot=True)
-            st.write(fig)
+            # //
+            # st.write("<h2>HeatMap<i> to show the correlation between the variables<i></h2>",unsafe_allow_html=True)
+            # fig, ax = plt.subplots()
+            # sns.heatmap(df_num.corr(), ax=ax,annot=True)
+            # st.write(fig)
             st.write("<h2>Computing pairwise correlation of columns</h2>",unsafe_allow_html=True)
             st.write(df_num.corr())
-            st.write("<h2>SCATTER PLOT</h2>",unsafe_allow_html=True)
-            var = list()
+            # st.write("<h2>SCATTER PLOT</h2>",unsafe_allow_html=True)
+            # var = list()
             
-            i=0
-            for column_1 in df_num.columns:
-                var.append(column_1)
-                for column_2 in df_num.columns:
-                    if column_2 not in var:
-                        # fig, ax = plt.subplots()
-                        # sns.scatterplot(df_num,x=str(column_1),y=str(column_2), ax=ax,annot=True)
-                        # st.write(fig)
-                        st.scatter_chart(df_num,x=column_1,y=column_2,color=colors[random.randint(0,len(colors))-1])
-                        i+=1
+            # i=0
+            # for column_1 in df_num.columns:
+            #     var.append(column_1)
+            #     for column_2 in df_num.columns:
+            #         if column_2 not in var:
+            #             # fig, ax = plt.subplots()
+            #             # sns.scatterplot(df_num,x=str(column_1),y=str(column_2), ax=ax,annot=True)
+            #             # st.write(fig)
+            #             st.scatter_chart(df_num,x=column_1,y=column_2,color=colors[random.randint(0,len(colors))-1])
+            #             i+=1
+            st.header("choose how you want to plot your Data")
+            col1, col2, col3, col4, col5 = st.columns(5,gap="small")
+
+            with col1:
+                Heatmap_btn = st.button('Heatmap')
+
+            with col2:
+                barchChart_btn = st.button('Bar chart')
+            with col3:
+                scatterPlot_btn = st.button('Scatter plot')
+            with col4:
+                boxPlot_btn = st.button('Box plot')
+            with col5:
+                lineChart_btn = st.button('Line chart')
+
+            if Heatmap_btn:
+                st.write("<h2>HeatMap<i> to show the correlation between the variables<i></h2>",unsafe_allow_html=True)
+                fig, ax = plt.subplots()
+                sns.heatmap(df_num.corr(), ax=ax,annot=True)
+                st.write(fig)
+                
+
+            if barchChart_btn:
+                st.header("Bar chart of the data")
+                var = list()
+                i=0
+                for column in df_num.columns:
+                    st.subheader(f"Bar chart of {column}")
+                    st.bar_chart(df_num[column],color=colors[random.randint(0,len(colors))-1])
+                st.subheader(f"Bar chart of all variables")
+                st.bar_chart(df_num)
+               # Do something...
+
+            if scatterPlot_btn:
+                st.write("<h2>Scatter Plot of each pair variables</h2>",unsafe_allow_html=True)
+                var = list()
+                i=0
+                for column_1 in df_num.columns:
+                    var.append(column_1)
+                    for column_2 in df_num.columns:
+                        if column_2 not in var:
+                            st.subheader(f"Scatter plot of {column_2} and {column_1}")
+                            st.scatter_chart(df_num,x=column_1,y=column_2,color=colors[random.randint(0,len(colors))-1])
+                            i+=1
+
+            if boxPlot_btn:
+                # var = list()
+                # for column_1 in df_num.columns:
+                #     var.append(column_1)
+                #     for column_2 in df_num.columns:
+                #             if column_2 not in var:
+                #                 st.subheader(f"Box plot of {column_2} and {column_1}")
+                #                 fig, ax = plt.subplots()
+                #                 st.write(fig)
+                st.write("<h2>Box Plots of the Data</h2>",unsafe_allow_html=True)
+                for column in df_num.columns:
+                    st.subheader(f"Box plot of {column}")
+                    fig = px.box(df_num,y=column,points="all")
+                    st.plotly_chart(fig,theme="streamlit",use_container_width=True)
+                    
+            if lineChart_btn:
+                st.write("<h2>Line chart of each pair variables</h2>",unsafe_allow_html=True)
+                var = list()
+                i=0
+                for column_1 in df_num.columns:
+                    var.append(column_1)
+                    for column_2 in df_num.columns:
+                        if column_2 not in var:
+                            st.subheader(f"Line plot of {column_2} and {column_1}")
+                            st.line_chart(df_num,x=column_1,y=column_2,color=colors[random.randint(0,len(colors))-1])
+                st.subheader(f"Line plot of all variables")
+                st.line_chart(df_num)
             st.header("Let us filter your data!")
             target_variable = st.text_input("Enter your target variable","")
             if st.button("Send"):
