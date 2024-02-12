@@ -1,4 +1,5 @@
 import io
+import math
 import operator
 import streamlit as st
 import pandas as pd
@@ -7,6 +8,8 @@ import seaborn as sns
 import streamlit.config
 import random
 import plotly.express as px
+import statsmodels.formula.api as smf
+
 
 st.set_page_config(page_title="Ahmed Bendrioua | Vis", layout="wide",page_icon="favicon.png")
 # st.session_state.theme="light"
@@ -37,12 +40,13 @@ st.markdown("""
                 .stAlert{background-color: #ababab;border-radius: 10px;}
                 .stAlert .e1nzilvr5{color:black;}
                 .plotlyjsicon{display:none;}
+                .simpletable{margin-bottom:50px}
         </style>
 """,unsafe_allow_html=True)
 st.title('Vis - visualize and discover the story behind your data with one click')
 st.write('<h6>Made by Ahmed Bendrioua</h6>',unsafe_allow_html=True)
 
-uploaded_file = st.file_uploader("Load your data",accept_multiple_files=False,type=["csv", "json"])
+uploaded_file = st.file_uploader("Load your data",accept_multiple_files=False,type=["csv", "json","xlsx"])
 
 colors = [
                 "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
@@ -92,12 +96,15 @@ if st.button('Submit'):
 
 if st.session_state['Submit']:
     if uploaded_file is not None:
-        if uploaded_file.type in  ["text/csv","application/json"]:
+        if uploaded_file.type in  ["text/csv","application/json","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]:
             # success upload message
             st.success("data uploaded succefully")
             # reading data
             if uploaded_file.type=="text/csv": df = pd.read_csv(uploaded_file)
-            else: df = pd.read_json(uploaded_file)
+            elif uploaded_file.type=="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": 
+                df = pd.read_excel(uploaded_file)
+            else:
+                df = pd.read_json(uploaded_file)
             # displaying data
             st.write("<h2> your data : "+uploaded_file.name+"</h2>",unsafe_allow_html=True)
             st.write(df)
@@ -281,19 +288,22 @@ if st.session_state['Submit']:
                 fig = px.box(df_num,y=column,points="all")
                 st.plotly_chart(fig,theme="streamlit",use_container_width=True)
 
-            st.header("Let us filter your data!")
+            st.header("Let us study your data!")
+            st.subheader("At the moment, it is only applicable to linear regression.")
             target_variable = st.text_input("Enter your target variable","")
+
             if st.button("Send"):
                 st.session_state["Send"] = not st.session_state["Send"]
                 if target_variable not in df.columns:
                     error_msg = "the variable " +target_variable +" doesn't exist in the data, try again"
                     st.error(error_msg)
                 else:
-                    st.header(f"Compute pairwise correlation of {target_variable} and the other columns")
+                    st.header(f"Computing pairwise correlation of {target_variable} and the other columns")
                     st.write(df_num.corr()[target_variable])
                     stat,stat1=False,False
                     val = {df_num.corr()[target_variable].index[i]: df_num.corr()[target_variable].values[i] for i in range(len(df_num.corr()[target_variable].values))}
                     # st.write(val)
+                    i=0
                     for key,value in val.items():
                         if abs(value)<=0.2:
                             stat=True
@@ -301,16 +311,57 @@ if st.session_state['Submit']:
                             val = {df_num.corr()[key].index[i]: df_num.corr()[key].values[i] for i in range(len(df_num.corr()[key].values))}
                             for key_sub,value1 in val.items():
                                 if key!=key_sub and abs(value1)>=0.4:
-                                    stat1=True
-                            if stat1:
-                                st.header(f"Compute pairwise correlation of {key} and the other columns")
-                                st.write(df_num.corr()[key])
-                                st.info(f"there is significant correlation between {key} and {key_sub} : {value1} which means that the two entry variables contain same information so it's perferable to remove {key}")
-
-
+                                    if i==0 : st.header(f"Computing pairwise correlation of {key} and the other columns")
+                                    i+=0
+                                    st.write(df_num.corr()[key])
+                                    st.info(f"there is significant correlation between {key} and {key_sub} : {value1} which means that the two entry variables contain same information so it's perferable to remove {key}")
                     if not stat:
                         st.write("all variables explain the target value")
 
+
+                    columns=[column for column in df_num.columns if column!=target_variable and not math.isnan(df_num[column].corr(df_num[target_variable]))]
+                    var = target_variable + " ~ " + ' + '.join(columns)
+                    st.header(f"identifying the more significant features on {target_variable} using Ordinary Least Squares(OLS)")
+                    linear_reg = smf.ols(var,data=df_num)
+                    res_reg = linear_reg.fit()
+                    st.write(res_reg.summary())
+                    st.header("Interpretation of the ols resuls")
+                    for i in range(len(res_reg.pvalues)):
+                        if res_reg.pvalues[i]>0.05:
+                            st.info(f"we failed to reject the H₀ (null hypothesis) : β{i} = 0 because the p-value = {res_reg.pvalues[i]} > 0.05, the {res_reg.params.index.values[i]} coef is likely to equal 0 or the data doesn't give statistically significant evidence to conclude that β{i} ≠ 0")
+
+                    st.subheader("R-squared")
+                    st.write(f"the Coefficient of determination r-squared: {res_reg.rsquared} shows how well the data fit the regression model")
+                    st.subheader("Log-Likelihood")
+                    st.write(f"the log-likelihood value of the model is a measure of how well the model predicts the observed data. A lower log-likelihood value indicates a better fit.")
+                    st.write(f"in our case the log-likelihood equal {res_reg.llf}")
+                    if(res_reg.f_pvalue<0.05): st.write(f"This is a measure of the overall significance of the regression model. It assesses whether the regression model as a whole is statistically significant in explaining the variance in the dependent variable. The F-statistic value is {res_reg.fvalue}, and the associated p-value (Prob (F-statistic)) is {res_reg.f_pvalue}, indicating that the regression model is statistically significant.")
+                    else : st.write(f"This is a measure of the overall significance of the regression model. It assesses whether the regression model as a whole is statistically significant in explaining the variance in the dependent variable. The F-statistic value is {res_reg.fvalue}, and the associated p-value (Prob (F-statistic)) is {res_reg.f_pvalue}, indicating that the regression model is statistically insignificant.")
+                    st.subheader("Akaike Information Criterion (AIC)")
+                    st.write(f"AIC is a measure of the relative quality of a statistical model for a given set of data. It penalizes the model for including additional parameters and aims to balance model complexity with goodness of fit. A lower AIC value indicates a better-fitting model.")
+                    st.write(f"AIC : {res_reg.aic}")
+                    st.subheader("Bayesian Information Criterion (BIC)")
+                    st.write(f"Similar to AIC, BIC : {res_reg.bic} is also a measure of the relative quality of a statistical model. It also penalizes the model for including additional parameters but uses a different penalty term than AIC. As with AIC, a lower BIC value indicates a better-fitting model.")
+                    st.header("Linear regression equation")
+                    latext = r'''
+                        ## 
+                        ###  
+                        $$ 
+                        Y = \Beta_0 + X^t\Beta + \epsilon
+                        $$ 
+                        '''
+                    st.write(latext)
+                    st.subheader("The estimated Betas values")
+                    for i in range(len(res_reg.params)):
+                        latext = r'''
+                        ## 
+                        ###  
+                        $$ 
+                        \Beta_{i} = {var}
+                        $$ 
+                        '''.replace("var",('%.6f' % res_reg.params[i])).replace("i",str(i))
+                        st.write(latext)
+                        
         else:
             error_msg = "files of type "+ uploaded_file.type +" are not supported"
             st.error(error_msg)
