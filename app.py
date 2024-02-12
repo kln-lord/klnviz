@@ -19,6 +19,19 @@ streamlit.config.set_option('server.enableCORS', False)
 #                 .st-emotion-cache-19rxjzo{background-color: rgb(40 40 40);}
 st.markdown("""
         <style>
+                .st-emotion-cache-19rxjzo:hover {
+                    border-color: rgb(0, 0, 0);
+                    color: rgb(0, 0, 0);
+                }
+                .st-emotion-cache-19rxjzo:focus:not(:active) {
+                    border-color: rgb(0, 0, 0);
+                    color: rgb(0, 0, 0);
+                }
+                .st-emotion-cache-19rxjzo:active {
+                    color: rgb(255, 255, 255);
+                    border-color: rgb(0, 0, 0);
+                    background-color: rgb(0, 0, 0);
+                }
                 .ezrtsby2{display:none;}
                 summary{display:none;}
                 .e1nzilvr3{display:none}
