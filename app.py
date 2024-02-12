@@ -5,7 +5,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import streamlit.config
-from itertools import combinations
 import random
 import plotly.express as px
 
@@ -73,6 +72,19 @@ if "Submit" not in st.session_state:
 
 if "Send" not in st.session_state:
     st.session_state["Send"] = False
+
+if "scatterPlot" not in st.session_state:
+    st.session_state["scatterPlot"] = False
+
+if "lineChart" not in st.session_state:
+    st.session_state["lineChart"] = False
+
+if "barChart" not in st.session_state:
+    st.session_state["barChart"] = False
+
+if "boxPlot" not in st.session_state:
+    st.session_state["boxPlot"] = False
+
 
 target_variable=""
 if st.button('Submit'):
@@ -162,6 +174,10 @@ if st.session_state['Submit']:
                 lineChart_btn = st.button('Line chart')
 
             if Heatmap_btn:
+                st.session_state["lineChart"] = False
+                st.session_state["scatterPlot"] = False
+                st.session_state["barChart"] = False
+                st.session_state["boxPlot"] = False
                 st.write("<h2>HeatMap<i> to show the correlation between the variables<i></h2>",unsafe_allow_html=True)
                 fig, ax = plt.subplots()
                 sns.heatmap(df_num.corr(), ax=ax,annot=True)
@@ -169,29 +185,42 @@ if st.session_state['Submit']:
                 
 
             if barchChart_btn:
-                st.header("Bar chart of the data")
-                var = list()
-                i=0
-                for column in df_num.columns:
-                    st.subheader(f"Bar chart of {column}")
-                    st.bar_chart(df_num[column],color=colors[random.randint(0,len(colors))-1])
-                st.subheader(f"Bar chart of all variables")
-                st.bar_chart(df_num)
+                st.session_state["lineChart"] = False
+                st.session_state["scatterPlot"] = False
+                st.session_state["barChart"] = not st.session_state["barChart"]
+                st.session_state["boxPlot"] = False
+                # st.header("Bar chart of the data")
+                # var = list()
+                # i=0
+                # for column in df_num.columns:
+                #     st.subheader(f"Bar chart of {column}")
+                #     st.bar_chart(df_num[column],color=colors[random.randint(0,len(colors))-1])
+                # st.subheader(f"Bar chart of all variables")
+                # st.bar_chart(df_num)
                # Do something...
 
             if scatterPlot_btn:
-                st.write("<h2>Scatter Plot of each pair variables</h2>",unsafe_allow_html=True)
-                var = list()
-                i=0
-                for column_1 in df_num.columns:
-                    var.append(column_1)
-                    for column_2 in df_num.columns:
-                        if column_2 not in var:
-                            st.subheader(f"Scatter plot of {column_2} and {column_1}")
-                            st.scatter_chart(df_num,x=column_1,y=column_2,color=colors[random.randint(0,len(colors))-1])
-                            i+=1
+                st.session_state["lineChart"] = False
+                st.session_state["scatterPlot"] = not st.session_state["scatterPlot"] 
+                st.session_state["barChart"] = False
+                st.session_state["boxPlot"] = False
+                
+                # st.write("<h2>Scatter Plot of each pair variables</h2>",unsafe_allow_html=True)
+                # var = list()
+                # i=0
+                # for column_1 in df_num.columns:
+                #     var.append(column_1)
+                #     for column_2 in df_num.columns:
+                #         if column_2 not in var:
+                #             st.subheader(f"Scatter plot of {column_2} and {column_1}")
+                #             st.scatter_chart(df_num,x=column_1,y=column_2,color=colors[random.randint(0,len(colors))-1])
+                #             i+=1
 
             if boxPlot_btn:
+                st.session_state["lineChart"] = False
+                st.session_state["scatterPlot"] = False
+                st.session_state["boxPlot"] = not st.session_state["boxPlot"]
+                st.session_state["barChart"] = False
                 # var = list()
                 # for column_1 in df_num.columns:
                 #     var.append(column_1)
@@ -200,24 +229,58 @@ if st.session_state['Submit']:
                 #                 st.subheader(f"Box plot of {column_2} and {column_1}")
                 #                 fig, ax = plt.subplots()
                 #                 st.write(fig)
-                st.write("<h2>Box Plots of the Data</h2>",unsafe_allow_html=True)
-                for column in df_num.columns:
-                    st.subheader(f"Box plot of {column}")
-                    fig = px.box(df_num,y=column,points="all")
-                    st.plotly_chart(fig,theme="streamlit",use_container_width=True)
+                # st.write("<h2>Box Plots of the Data</h2>",unsafe_allow_html=True)
+                # for column in df_num.columns:
+                #     st.subheader(f"Box plot of {column}")
+                #     fig = px.box(df_num,y=column,points="all")
+                #     st.plotly_chart(fig,theme="streamlit",use_container_width=True)
                     
             if lineChart_btn:
-                st.write("<h2>Line chart of each pair variables</h2>",unsafe_allow_html=True)
-                var = list()
-                i=0
-                for column_1 in df_num.columns:
-                    var.append(column_1)
-                    for column_2 in df_num.columns:
-                        if column_2 not in var:
-                            st.subheader(f"Line plot of {column_2} and {column_1}")
-                            st.line_chart(df_num,x=column_1,y=column_2,color=colors[random.randint(0,len(colors))-1])
-                st.subheader(f"Line plot of all variables")
-                st.line_chart(df_num)
+                st.session_state["scatterPlot"] = False
+                st.session_state["lineChart"] = not st.session_state["lineChart"]
+                st.session_state["barChart"] = False
+                st.session_state["boxPlot"] = False
+                # st.write("<h2>Line chart of each pair variables</h2>",unsafe_allow_html=True)
+                # var = list()
+                # i=0
+                # for column_1 in df_num.columns:
+                #     var.append(column_1)
+                #     for column_2 in df_num.columns:
+                #         if column_2 not in var:
+                #             st.subheader(f"Line plot of {column_2} and {column_1}")
+                #             st.line_chart(df_num,x=column_1,y=column_2,color=colors[random.randint(0,len(colors))-1])
+                # st.subheader(f"Line plot of all variables")
+                # st.line_chart(df_num)
+
+            if st.session_state["scatterPlot"]:
+                st.write("<h2>Scatter plot </h2>",unsafe_allow_html=True)
+                column_1 = st.selectbox('choose the first variable for the x axis?',df_num.columns)
+                if column_1 is not None: 
+                    column_2 = st.selectbox('choose the first variable for the y axis?',df_num.columns)
+                    st.subheader(f"Scatter plot of {column_1} and {column_2}")
+                    st.scatter_chart(df_num,x=column_1,y=column_2,color=colors[random.randint(0,len(colors))-1])
+
+            if st.session_state["lineChart"]:
+                st.write("<h2>Line chart </h2>",unsafe_allow_html=True)
+                column_1 = st.selectbox('choose the first variable for the x axis?',df_num.columns)
+                if column_1 is not None: 
+                    column_2 = st.selectbox('choose the first variable for the y axis?',df_num.columns)
+                    st.subheader(f"Line chart of {column_1} and {column_2}")
+                    st.line_chart(df_num,x=column_1,y=column_2,color=colors[random.randint(0,len(colors))-1])
+
+            if st.session_state["barChart"]:
+                st.header("Bar chart of the data")
+                column = st.selectbox('choose the first variable you want to plot?',df_num.columns)
+                st.subheader(f"Bar chart of {column}")
+                st.bar_chart(df_num[column],y=column,color=colors[random.randint(0,len(colors))-1])
+            
+            if st.session_state["boxPlot"]:
+                st.write("<h2>Box Plot of the Data</h2>",unsafe_allow_html=True)
+                column = st.selectbox('choose the first variable you want to plot?',df_num.columns)
+                st.subheader(f"Box plot of {column}")
+                fig = px.box(df_num,y=column,points="all")
+                st.plotly_chart(fig,theme="streamlit",use_container_width=True)
+
             st.header("Let us filter your data!")
             target_variable = st.text_input("Enter your target variable","")
             if st.button("Send"):
