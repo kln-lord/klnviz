@@ -6,4 +6,4 @@ plotly
 openpyxl
 statsmodels
 openai==0.28
-sklearn
+scikit-learn
