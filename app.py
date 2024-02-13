@@ -43,6 +43,7 @@ st.markdown("""
                 .stAlert .e1nzilvr5{color:black;}
                 .plotlyjsicon{display:none;}
                 .simpletable{margin-bottom:50px}
+                .e116k4er1:hover{background-color:black;}
         </style>
 """,unsafe_allow_html=True)
 st.title('Vis - visualize and discover the story behind your data')
@@ -307,6 +308,7 @@ if st.session_state['Submit']:
 
             if st.button("Send"):
                 st.session_state["Send"] = not st.session_state["Send"]
+            if st.session_state["Send"]:
                 if target_variable not in df.columns:
                     error_msg = "the variable " +target_variable +" doesn't exist in the data, try again"
                     st.error(error_msg)
@@ -404,7 +406,7 @@ if st.session_state['Submit']:
                         )
                         return response.choices[0].text.strip()
                     st.subheader("Summary")
-                    st.write(interpretate_res(res))
+                    # st.write(interpretate_res(res))
 
                     st.header("Predict the target variable based on input features")
                     X = df_num[[column for column in df_num.columns if column not in insignificant_variables and column!=target_variable]]
@@ -449,6 +451,30 @@ if st.session_state['Submit']:
                     st.write(f'MAE: {metrics.mean_absolute_error(Y_test, predictions)}')
                     st.write(f'MSE: {metrics.mean_squared_error(Y_test, predictions)}')
                     st.write(f'RMSE: {np.sqrt(metrics.mean_squared_error(Y_test, predictions))}')
+
+                    if res_reg.rsquared>0.8:
+                        st.subheader(f"since the model fit well the data we can use it to predict {target_variable} for new input variables")
+                        # df_num.column = st.columns(len(df_num.columns),gap="small")
+                        # dict_columns = {}
+                        # for column in df_num.columns:
+                        #     with column:
+                        #         input = st.text_input(column)
+                        with st.form("my_form"):
+                            # st.write("Inside the form")
+                            # slider_val = st.slider("Form slider")
+                            # checkbox_val = st.checkbox("Form checkbox")
+
+                            # Every form must have a submit button.
+                            inputs = {}
+                            for i in range(len(X.columns)):
+                                inputs[i] = st.number_input(f"Enter {X.columns[i]} : ")
+                            submitted = st.form_submit_button("Predict")
+                            if submitted:
+                                Y_pred = ((np.matrix(np.insert(list(inputs.values()),0,1)))).reshape(1,len(res_reg.params))*np.matrix(res_reg.params).reshape(len(res_reg.params),1)
+                                st.write(f"The predicted value of {target_variable} is : ") 
+                                st.code(f"{float(Y_pred)}", language="markdown")
+
+
 
         else:
             error_msg = "files of type "+ uploaded_file.type +" are not supported"
