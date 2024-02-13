@@ -106,6 +106,8 @@ if st.session_state['Submit']:
                 df = pd.read_excel(uploaded_file)
             else:
                 df = pd.read_json(uploaded_file)
+            for column in df.columns:
+                df = df.rename(columns={column:column.replace(" ","_")})
             # displaying data
             st.write("<h2> your data : "+uploaded_file.name+"</h2>",unsafe_allow_html=True)
             st.write(df)
