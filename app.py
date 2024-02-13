@@ -22,6 +22,7 @@ streamlit.config.set_option('server.enableCORS', False)
 #                 .st-emotion-cache-19rxjzo{background-color: rgb(40 40 40);}
 st.markdown("""
         <style>
+                .e1nzilvr5{overflow-x: auto;}
                 .st-emotion-cache-7ym5gk:hover {
                     border-color: rgb(0, 0, 0);
                     color: rgb(0, 0, 0);
