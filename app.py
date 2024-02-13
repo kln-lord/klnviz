@@ -43,7 +43,7 @@ st.markdown("""
                 .stAlert .e1nzilvr5{color:black;}
                 .plotlyjsicon{display:none;}
                 .simpletable{margin-bottom:50px}
-                .e116k4er1:hover{background-color:black;}
+                .e116k4er1:hover{background-color:black !important;}
         </style>
 """,unsafe_allow_html=True)
 st.title('Vis - visualize and discover the story behind your data')
