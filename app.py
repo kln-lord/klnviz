@@ -456,9 +456,8 @@ else:
 
     
 st.write("""
-        <footer class="frame frame--footer" style="display:none;">
-            <p class="frame__author"><span>Made by <a target="_blank" href="https://www.linkedin.com/in/ahmedbendrioua/">@ahmedbendrioua</a></span> <span><a target="_blank" href="mailto:ahmedbendriouaa@gmail.com">Hire Me</a></span></p>
-        </footer>          
+        <script src=".\iframeResizer.contentWindow.js"></script>
+                  
             """,unsafe_allow_html=True)
 
 # st.write(
