@@ -1,6 +1,7 @@
 import io
 import math
 import operator
+import openai
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -10,7 +11,7 @@ import random
 import plotly.express as px
 import statsmodels.formula.api as smf
 
-
+openai.api_key="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"
 st.set_page_config(page_title="Ahmed Bendrioua | Vis", layout="wide",page_icon="favicon.png")
 # st.session_state.theme="light"
 streamlit.config.set_option("theme.base","light")
@@ -326,15 +327,24 @@ if st.session_state['Submit']:
                     res_reg = linear_reg.fit()
                     st.write(res_reg.summary())
                     st.header("Interpretation of the ols resuls")
+                    insignificant_variables = []
                     for i in range(len(res_reg.pvalues)):
                         if res_reg.pvalues[i]>0.05:
+                            insignificant_variables.append(res_reg.params.index.values[i])
                             st.info(f"we failed to reject the H₀ (null hypothesis) : β{i} = 0 because the p-value = {res_reg.pvalues[i]} > 0.05, the {res_reg.params.index.values[i]} coef is likely to equal 0 or the data doesn't give statistically significant evidence to conclude that β{i} ≠ 0")
+                    if len(insignificant_variables)>0:
+                        st.subheader(f"The results after removing {', '.join(insignificant_variables)}")
+                        var = target_variable + " ~ " + ' + '.join([column for column in columns if column not in insignificant_variables])
+                        linear_reg = smf.ols(var,data=df_num)
+                        res_reg = linear_reg.fit()
+                        st.write(res_reg.summary())
 
                     st.subheader("R-squared")
                     st.write(f"the Coefficient of determination r-squared: {res_reg.rsquared} shows how well the data fit the regression model")
                     st.subheader("Log-Likelihood")
                     st.write(f"the log-likelihood value of the model is a measure of how well the model predicts the observed data. A lower log-likelihood value indicates a better fit.")
                     st.write(f"in our case the log-likelihood equal {res_reg.llf}")
+                    st.subheader("F-statistic and Prob (F-statistic)")
                     if(res_reg.f_pvalue<0.05): st.write(f"This is a measure of the overall significance of the regression model. It assesses whether the regression model as a whole is statistically significant in explaining the variance in the dependent variable. The F-statistic value is {res_reg.fvalue}, and the associated p-value (Prob (F-statistic)) is {res_reg.f_pvalue}, indicating that the regression model is statistically significant.")
                     else : st.write(f"This is a measure of the overall significance of the regression model. It assesses whether the regression model as a whole is statistically significant in explaining the variance in the dependent variable. The F-statistic value is {res_reg.fvalue}, and the associated p-value (Prob (F-statistic)) is {res_reg.f_pvalue}, indicating that the regression model is statistically insignificant.")
                     st.subheader("Akaike Information Criterion (AIC)")
@@ -361,7 +371,73 @@ if st.session_state['Submit']:
                         $$ 
                         '''.replace("var",('%.6f' % res_reg.params[i])).replace("i",str(i))
                         st.write(latext)
-                        
+
+                    res = res_reg.summary()
+                    def interpretate_res(res):
+                        model_engine = "gpt-3.5-turbo-instruct"
+                        prompt = (
+                            f"Interpretate the results of the fitted data\n"
+                            f"{res}\n"
+                            f"Interpretation:"
+                        )
+                        response = openai.Completion.create(
+                            engine=model_engine,
+                            prompt=prompt,
+                            temperature=0,
+                            max_tokens=300,
+                            top_p=1.0,
+                            frequency_penalty=0.0,
+                            presence_penalty=0.0,
+                            stop=["#", ";"]
+                        )
+                        return response.choices[0].text.strip()
+                    st.subheader("Summary")
+                    st.write(interpretate_res(res))
+
+                    st.header("Predict the target variable based on input features")
+                    X = df_num[[column for column in df_num.columns if column not in insignificant_variables and column!=target_variable]]
+                    Y = df_num[target_variable]
+
+                    from sklearn.model_selection import train_test_split
+                    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=random.randint(0,10000))
+
+                    from sklearn.linear_model import LinearRegression
+                    from sklearn import metrics
+                    import numpy as np
+                    lm = LinearRegression()
+                    lm.fit(X_train,Y_train)
+                    predictions = lm.predict(X_test)
+                    df_pred = pd.DataFrame({'predictions':predictions, 'y test':Y_test})
+                    st.scatter_chart(data=df_pred,x='predictions',y='y test',color=colors[random.randint(0,len(colors))-1])
+                    latex = r'''
+                        ## Evaluation criteria for the regression model
+                        There are three evaluation criteria for regression problems:
+
+                        **Mean Absolute Error** (MAE) :
+
+                        $$\frac 1n\sum_{i=1}^n|y_i-\hat{y}_i|$$
+
+                        **Mean Squared Error** (MSE) :
+
+                        $$\frac 1n\sum_{i=1}^n(y_i-\hat{y}_i)^2$$
+
+                        **Root Mean Squared Error** (RMSE) :
+
+                        $$\sqrt{\frac 1n\sum_{i=1}^n(y_i-\hat{y}_i)^2}$$
+
+                        Comparaison de ces trois critères :
+
+                        - **MAE** is the easiest to undesrtand because it's simply Mean Absolute Error.
+                        - **MSE** is more popular than MAE because MSE is more affected by the highest errors, which tends to be useful in practice.
+                        - **RMSE** is even more popular than MSE, because RMSE is interpretable by comparing it to the 'Y' values as they are in the same units.
+
+                        All these criteria are **loss functions** that we aim to minimize.
+                    '''
+                    st.write(latex)
+                    st.write(f'MAE: {metrics.mean_absolute_error(Y_test, predictions)}')
+                    st.write(f'MSE: {metrics.mean_squared_error(Y_test, predictions)}')
+                    st.write(f'RMSE: {np.sqrt(metrics.mean_squared_error(Y_test, predictions))}')
+
         else:
             error_msg = "files of type "+ uploaded_file.type +" are not supported"
             st.error(error_msg)

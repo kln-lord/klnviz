@@ -5,3 +5,4 @@ seaborn
 plotly
 openpyxl
 statsmodels
+openai
