@@ -406,7 +406,7 @@ if st.session_state['Submit']:
                         )
                         return response.choices[0].text.strip()
                     st.subheader("Summary")
-                    # st.write(interpretate_res(res))
+                    st.write(interpretate_res(res))
 
                     st.header("Predict the target variable based on input features")
                     X = df_num[[column for column in df_num.columns if column not in insignificant_variables and column!=target_variable]]
