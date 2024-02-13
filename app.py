@@ -44,7 +44,7 @@ st.markdown("""
                 .simpletable{margin-bottom:50px}
         </style>
 """,unsafe_allow_html=True)
-st.title('Vis - visualize and discover the story behind your data with one click')
+st.title('Vis - visualize and discover the story behind your data')
 st.write('<h6>Made by Ahmed Bendrioua</h6>',unsafe_allow_html=True)
 
 uploaded_file = st.file_uploader("Load your data",accept_multiple_files=False,type=["csv", "json","xlsx"])
@@ -89,6 +89,8 @@ if "barChart" not in st.session_state:
 
 if "boxPlot" not in st.session_state:
     st.session_state["boxPlot"] = False
+if "Edit" not in st.session_state:
+    st.session_state['Edit'] = False
 
 
 target_variable=""
@@ -114,6 +116,10 @@ if st.session_state['Submit']:
             # displaying data
             st.write("<h2> your data : "+uploaded_file.name+"</h2>",unsafe_allow_html=True)
             st.write(df)
+            st.header("Edit your data")
+            st.write("Hit Enter to save changes")
+            st.session_state['Edit'] = not st.session_state['Edit']
+            df = st.data_editor(data=df,hide_index=True,num_rows='dynamic')
             # droping non numirecal columns
             object_columns=[column for column in df.columns if df[column].dtype in ['object','datetime64[ns, UTC]']]
             df_num = df.drop(columns=object_columns)
