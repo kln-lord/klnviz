@@ -10,6 +10,16 @@ import streamlit.config
 import random
 import plotly.express as px
 import statsmodels.formula.api as smf
+import statsmodels.api as sm
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn import metrics
+import numpy as np
+import plotly.io as pio
+
+
+pio.templates.default = "plotly"
+
 
 openai.api_key="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"
 st.set_page_config(page_title="Ahmed Bendrioua | Vis", layout="wide",page_icon="favicon.png")
@@ -94,6 +104,9 @@ if "boxPlot" not in st.session_state:
 if "Edit" not in st.session_state:
     st.session_state['Edit'] = False
 
+if "histPlot" not in st.session_state:
+    st.session_state['histPlot']=False
+
 
 target_variable=""
 if st.button('Submit'):
@@ -114,6 +127,7 @@ if st.session_state['Submit']:
                 df = df.rename(columns={column:column.replace(" ","_")})
             for column in df.columns:
                 if "unnamed" in column.lower(): df=df.drop(columns=[column])
+                if "id" in column.lower() : df=df.drop(columns=[column])
 
             # displaying data
             st.write("<h2> your data : "+uploaded_file.name+"</h2>",unsafe_allow_html=True)
@@ -180,7 +194,7 @@ if st.session_state['Submit']:
             #             st.scatter_chart(df_num,x=column_1,y=column_2,color=colors[random.randint(0,len(colors))-1])
             #             i+=1
             st.header("choose how you want to plot your Data")
-            col1, col2, col3, col4, col5 = st.columns(5,gap="small")
+            col1, col2, col3, col4, col5, col6 = st.columns(6,gap="small")
 
             with col1:
                 Heatmap_btn = st.button('Heatmap')
@@ -193,12 +207,15 @@ if st.session_state['Submit']:
                 boxPlot_btn = st.button('Box plot')
             with col5:
                 lineChart_btn = st.button('Line chart')
+            with col6:
+                histPlot_btn = st.button('hist Plot')
 
             if Heatmap_btn:
                 st.session_state["lineChart"] = False
                 st.session_state["scatterPlot"] = False
                 st.session_state["barChart"] = False
                 st.session_state["boxPlot"] = False
+                st.session_state["histPlot"] = False
                 st.write("<h2>HeatMap<i> to show the correlation between the variables<i></h2>",unsafe_allow_html=True)
                 fig, ax = plt.subplots()
                 sns.heatmap(df_num.corr(), ax=ax,annot=True)
@@ -210,6 +227,7 @@ if st.session_state['Submit']:
                 st.session_state["scatterPlot"] = False
                 st.session_state["barChart"] = not st.session_state["barChart"]
                 st.session_state["boxPlot"] = False
+                st.session_state["histPlot"] = False
                 # st.header("Bar chart of the data")
                 # var = list()
                 # i=0
@@ -225,6 +243,7 @@ if st.session_state['Submit']:
                 st.session_state["scatterPlot"] = not st.session_state["scatterPlot"] 
                 st.session_state["barChart"] = False
                 st.session_state["boxPlot"] = False
+                st.session_state["histPlot"] = False
                 
                 # st.write("<h2>Scatter Plot of each pair variables</h2>",unsafe_allow_html=True)
                 # var = list()
@@ -242,6 +261,7 @@ if st.session_state['Submit']:
                 st.session_state["scatterPlot"] = False
                 st.session_state["boxPlot"] = not st.session_state["boxPlot"]
                 st.session_state["barChart"] = False
+                st.session_state["histPlot"] = False
                 # var = list()
                 # for column_1 in df_num.columns:
                 #     var.append(column_1)
@@ -261,6 +281,7 @@ if st.session_state['Submit']:
                 st.session_state["lineChart"] = not st.session_state["lineChart"]
                 st.session_state["barChart"] = False
                 st.session_state["boxPlot"] = False
+                st.session_state["histPlot"] = False
                 # st.write("<h2>Line chart of each pair variables</h2>",unsafe_allow_html=True)
                 # var = list()
                 # i=0
@@ -272,6 +293,12 @@ if st.session_state['Submit']:
                 #             st.line_chart(df_num,x=column_1,y=column_2,color=colors[random.randint(0,len(colors))-1])
                 # st.subheader(f"Line plot of all variables")
                 # st.line_chart(df_num)
+            if histPlot_btn:
+                st.session_state["histPlot"] = not st.session_state["histPlot"]
+                st.session_state["scatterPlot"] = False
+                st.session_state["lineChart"] = False
+                st.session_state["barChart"] = False
+                st.session_state["boxPlot"] = False
 
             if st.session_state["scatterPlot"]:
                 st.write("<h2>Scatter plot </h2>",unsafe_allow_html=True)
@@ -299,8 +326,26 @@ if st.session_state['Submit']:
                 st.write("<h2>Box Plot of the Data</h2>",unsafe_allow_html=True)
                 column = st.selectbox('choose the first variable you want to plot?',df_num.columns)
                 st.subheader(f"Box plot of {column}")
-                fig = px.box(df_num,y=column,points="all")
+                fig = px.box(df_num,y=column,points="all",color_discrete_sequence=[colors[random.randint(0,len(colors))-1]])
                 st.plotly_chart(fig,theme="streamlit",use_container_width=True)
+            
+            # if st.session_state["jointPlot"]:
+            #     st.write("<h2>Joint Plot of the Data</h2>",unsafe_allow_html=True)
+            #     column_1 = st.selectbox('choose the variable x for the x axis : ',df_num.columns)
+            #     if column_1 is not None:
+            #         column_2 = st.selectbox('choose the variable for the y axis :',df_num.columns)
+            #         st.subheader(f"joint chart of {column_1} and {column_2}")
+            #         fig, ax = plt.subplots()
+            #         sns.histplot(x=column_1,y=column_2,data=df_num,color=colors[random.randint(0,len(colors))-1],ax=ax)
+            #         st.write(fig)
+                
+            if st.session_state["histPlot"]:
+                st.write("<h2>Hist Plot of the Data</h2>",unsafe_allow_html=True)
+                column = st.selectbox('choose the variable to plot : ',df_num.columns)
+                st.subheader(f"Hist Plot of {column}")
+                fig = px.histogram(x=column,data_frame=df_num,nbins=100,color_discrete_sequence=[colors[random.randint(0,len(colors))-1]])
+                st.plotly_chart(fig,use_container_width=True)
+                
 
             st.header("Let us study your data!")
             st.subheader("At the moment, it is only applicable to linear regression.")
@@ -332,147 +377,226 @@ if st.session_state['Submit']:
                                     st.info(f"there is significant correlation between {key} and {key_sub} : {value1} which means that the two entry variables contain same information so it's perferable to remove {key}")
                     if not stat:
                         st.write("all variables explain the target value")
+                    def interpretate_res(res):
+                            model_engine = "gpt-3.5-turbo-instruct"
+                            prompt = (
+                                f"Interpretate the results of the fitted data\n"
+                                f"{res}\n"
+                                f"Interpretation:"
+                            )
+                            response = openai.Completion.create(
+                                engine=model_engine,
+                                prompt=prompt,
+                                temperature=0,
+                                max_tokens=300,
+                                top_p=1.0,
+                                frequency_penalty=0.0,
+                                presence_penalty=0.0,
+                                stop=["#", ";"]
+                            )
+                            return response.choices[0].text.strip()
+                    if len(df_num[target_variable].unique())<=5:
+                        st.header(f"Pair plot between the variables : ")
+                        fig, ax = plt.subplots()
+                        # sns.pairplot(df_num,hue=target_variable,palette='bwr').savefig("subplot")
+                        # st.image("subplot.png")
+                        i = 0;
+                        dfreedom=0
+                        st.header(f"ANOVA Test: ")
+                        insi_columns=[]
+                        for column in df_num.columns:
+                            if column!=target_variable:
+                                st.subheader(f"ANOVA Test between {column} and {target_variable}")
+                                Tab_anova=sm.stats.anova_lm(smf.ols('var ~ C(target)'.replace('var',column).replace("target",target_variable), data=df_num).fit(), typ=2)
+                                st.write(Tab_anova)
+                                
+                                pvalue = Tab_anova["PR(>F)"]['C(Clique)']
+                                dfreedom = Tab_anova["df"]['C(Clique)']
+                                if i==0 : st.info(f"It seem that your data has {int(dfreedom)+1} groups")
+                                i+=1
+                                if pvalue>=0.05:
+                                    insi_columns.append(column)
+                                    st.info(f"The p-value : {pvalue} associated with the F-statistic indicates that there is not enough evidence to suggest that there are significant differences between the means of the groups. In other words, the groups are not statistically significantly different from each other in terms of the variable {column} and it's safe to not include it while learning")
+                        
+                        # aprentissage
+                        st.header("Using support vector machine (SVM) algorithm")
+                        st.subheader("to classify the data by finding the optimal decision boundary that maximally separates different classes.")
+                        X = df_num[[column for column in df_num.columns if column not in insi_columns and column!=target_variable]]
+                        Y = df_num[target_variable]
+                        X_Train, X_Test, Y_Train, Y_Test = train_test_split(X, Y, test_size = 0.25, random_state = 0)
+                        from sklearn.preprocessing import StandardScaler
+                        sc_X = StandardScaler()
+                        X_Train = sc_X.fit_transform(X_Train)
+                        X_Test = sc_X.fit_transform(X_Test)
+                        from sklearn.svm import SVC
+                        classifier = SVC(kernel = 'linear', random_state = 0)
+                        st.write(classifier.fit(X_Train, Y_Train))
+                        Y_Pred = classifier.predict(X_Test)
+                        # st.write(Y_Pred)
+                        st.header("Classification Report")
+                        st.dataframe(
+                            pd.DataFrame(metrics.classification_report(Y_Test,Y_Pred,output_dict=True,target_names=["class i".replace("i",str(i)) for i in range(int(dfreedom)+1)])).transpose()
+                        )
+                        # df_pred = pd.DataFrame({"predictions":Y_Pred,"Test":Y_Test})
+                        # st.line_chart(data=df_pred,x='Test',y='predictions')
+                        st.header("summary")
+                        st.write(interpretate_res(metrics.classification_report(Y_Test,Y_Pred)))
+                        st.header("Confusion Matrix")
+                        cf_matrix = metrics.confusion_matrix(Y_Test, Y_Pred)
+                        group_names = ['True Neg','False Pos','False Neg','True Pos']
+                        group_counts = ["{0:0.0f}".format(value) for value in cf_matrix.flatten()]
+                        labels = [f"{v1}\n{v2}" for v1, v2 in zip(group_names,group_counts)]
+                        labels = np.asarray(labels).reshape(2,2)
+                        fig, ax = plt.subplots()
+                        sns.heatmap(cf_matrix,annot=labels,fmt='',ax=ax,cmap='Blues')
+                        st.pyplot(fig)
+
+                        if metrics.accuracy_score(Y_Test, Y_Pred)>0.8:
+                            st.subheader(f"since the model fit well the data we can use it to predict {target_variable} for new input variables")
+                            # df_num.column = st.columns(len(df_num.columns),gap="small")
+                            # dict_columns = {}
+                            # for column in df_num.columns:
+                            #     with column:
+                            #         input = st.text_input(column)
+                            with st.form("my_form"):
+                                # st.write("Inside the form")
+                                # slider_val = st.slider("Form slider")
+                                # checkbox_val = st.checkbox("Form checkbox")
+
+                                # Every form must have a submit button.
+                                inputs = {}
+                                for i in range(len(X.columns)):
+                                    inputs[i] = st.number_input(f"Enter {X.columns[i]} : ")
+                                submitted = st.form_submit_button("Predict")
+                                if submitted:
+                                    # st.write(inputs.values())
+                                    Y_pred = classifier.predict(np.array([list(inputs.values())]))
+                                    st.write(f"The predicted value of {target_variable} is : ") 
+                                    st.code(f"{int(Y_pred)}", language="markdown")
 
 
-                    columns=[column for column in df_num.columns if column!=target_variable and not math.isnan(df_num[column].corr(df_num[target_variable]))]
-                    var = target_variable + " ~ " + ' + '.join(columns)
-                    st.header(f"identifying the more significant features on {target_variable} using Ordinary Least Squares(OLS)")
-                    linear_reg = smf.ols(var,data=df_num)
-                    res_reg = linear_reg.fit()
-                    st.write(res_reg.summary())
-                    st.header("Interpretation of the ols resuls")
-                    insignificant_variables = []
-                    for i in range(len(res_reg.pvalues)):
-                        if res_reg.pvalues[i]>0.05:
-                            insignificant_variables.append(res_reg.params.index.values[i])
-                            st.info(f"we failed to reject the H₀ (null hypothesis) : β{i} = 0 because the p-value = {res_reg.pvalues[i]} > 0.05, the {res_reg.params.index.values[i]} coef is likely to equal 0 or the data doesn't give statistically significant evidence to conclude that β{i} ≠ 0")
-                    if len(insignificant_variables)>0:
-                        st.subheader(f"The results after removing {', '.join(insignificant_variables)}")
-                        var = target_variable + " ~ " + ' + '.join([column for column in columns if column not in insignificant_variables])
+
+
+                    else:
+                        columns=[column for column in df_num.columns if column!=target_variable and not math.isnan(df_num[column].corr(df_num[target_variable]))]
+                        var = target_variable + " ~ " + ' + '.join(columns)
+                        st.header(f"identifying the more significant features on {target_variable} using Ordinary Least Squares(OLS)")
                         linear_reg = smf.ols(var,data=df_num)
                         res_reg = linear_reg.fit()
                         st.write(res_reg.summary())
+                        st.header("Interpretation of the ols resuls")
+                        insignificant_variables = []
+                        for i in range(len(res_reg.pvalues)):
+                            if res_reg.pvalues[i]>0.05:
+                                insignificant_variables.append(res_reg.params.index.values[i])
+                                st.info(f"we failed to reject the H₀ (null hypothesis) : β{i} = 0 because the p-value = {res_reg.pvalues[i]} > 0.05, the {res_reg.params.index.values[i]} coef is likely to equal 0 or the data doesn't give statistically significant evidence to conclude that β{i} ≠ 0")
+                        if len(insignificant_variables)>0:
+                            st.subheader(f"The results after removing {', '.join(insignificant_variables)}")
+                            var = target_variable + " ~ " + ' + '.join([column for column in columns if column not in insignificant_variables])
+                            linear_reg = smf.ols(var,data=df_num)
+                            res_reg = linear_reg.fit()
+                            st.write(res_reg.summary())
 
-                    st.subheader("R-squared")
-                    st.write(f"the Coefficient of determination r-squared: {res_reg.rsquared} shows how well the data fit the regression model")
-                    st.subheader("Log-Likelihood")
-                    st.write(f"the log-likelihood value of the model is a measure of how well the model predicts the observed data. A lower log-likelihood value indicates a better fit.")
-                    st.write(f"in our case the log-likelihood equal {res_reg.llf}")
-                    st.subheader("F-statistic and Prob (F-statistic)")
-                    if(res_reg.f_pvalue<0.05): st.write(f"This is a measure of the overall significance of the regression model. It assesses whether the regression model as a whole is statistically significant in explaining the variance in the dependent variable. The F-statistic value is {res_reg.fvalue}, and the associated p-value (Prob (F-statistic)) is {res_reg.f_pvalue}, indicating that the regression model is statistically significant.")
-                    else : st.write(f"This is a measure of the overall significance of the regression model. It assesses whether the regression model as a whole is statistically significant in explaining the variance in the dependent variable. The F-statistic value is {res_reg.fvalue}, and the associated p-value (Prob (F-statistic)) is {res_reg.f_pvalue}, indicating that the regression model is statistically insignificant.")
-                    st.subheader("Akaike Information Criterion (AIC)")
-                    st.write(f"AIC is a measure of the relative quality of a statistical model for a given set of data. It penalizes the model for including additional parameters and aims to balance model complexity with goodness of fit. A lower AIC value indicates a better-fitting model.")
-                    st.write(f"AIC : {res_reg.aic}")
-                    st.subheader("Bayesian Information Criterion (BIC)")
-                    st.write(f"Similar to AIC, BIC : {res_reg.bic} is also a measure of the relative quality of a statistical model. It also penalizes the model for including additional parameters but uses a different penalty term than AIC. As with AIC, a lower BIC value indicates a better-fitting model.")
-                    st.header("Linear regression equation")
-                    latext = r'''
-                        ## 
-                        ###  
-                        $$ 
-                        Y = \Beta_0 + X^t\Beta + \epsilon
-                        $$ 
-                        '''
-                    st.write(latext)
-                    st.subheader("The estimated Betas values")
-                    for i in range(len(res_reg.params)):
+                        st.subheader("R-squared")
+                        st.write(f"the Coefficient of determination r-squared: {res_reg.rsquared} shows how well the data fit the regression model")
+                        st.subheader("Log-Likelihood")
+                        st.write(f"the log-likelihood value of the model is a measure of how well the model predicts the observed data. A lower log-likelihood value indicates a better fit.")
+                        st.write(f"in our case the log-likelihood equal {res_reg.llf}")
+                        st.subheader("F-statistic and Prob (F-statistic)")
+                        if(res_reg.f_pvalue<0.05): st.write(f"This is a measure of the overall significance of the regression model. It assesses whether the regression model as a whole is statistically significant in explaining the variance in the dependent variable. The F-statistic value is {res_reg.fvalue}, and the associated p-value (Prob (F-statistic)) is {res_reg.f_pvalue}, indicating that the regression model is statistically significant.")
+                        else : st.write(f"This is a measure of the overall significance of the regression model. It assesses whether the regression model as a whole is statistically significant in explaining the variance in the dependent variable. The F-statistic value is {res_reg.fvalue}, and the associated p-value (Prob (F-statistic)) is {res_reg.f_pvalue}, indicating that the regression model is statistically insignificant.")
+                        st.subheader("Akaike Information Criterion (AIC)")
+                        st.write(f"AIC is a measure of the relative quality of a statistical model for a given set of data. It penalizes the model for including additional parameters and aims to balance model complexity with goodness of fit. A lower AIC value indicates a better-fitting model.")
+                        st.write(f"AIC : {res_reg.aic}")
+                        st.subheader("Bayesian Information Criterion (BIC)")
+                        st.write(f"Similar to AIC, BIC : {res_reg.bic} is also a measure of the relative quality of a statistical model. It also penalizes the model for including additional parameters but uses a different penalty term than AIC. As with AIC, a lower BIC value indicates a better-fitting model.")
+                        st.header("Linear regression equation")
                         latext = r'''
-                        ## 
-                        ###  
-                        $$ 
-                        \Beta_{i} = {var}
-                        $$ 
-                        '''.replace("var",('%.6f' % res_reg.params[i])).replace("i",str(i))
+                            ## 
+                            ###  
+                            $$ 
+                            Y = \Beta_0 + X^t\Beta + \epsilon
+                            $$ 
+                            '''
                         st.write(latext)
+                        st.subheader("The estimated Betas values")
+                        for i in range(len(res_reg.params)):
+                            latext = r'''
+                            ## 
+                            ###  
+                            $$ 
+                            \Beta_{i} = {var}
+                            $$ 
+                            '''.replace("var",('%.6f' % res_reg.params[i])).replace("i",str(i))
+                            st.write(latext)
 
-                    res = res_reg.summary()
-                    def interpretate_res(res):
-                        model_engine = "gpt-3.5-turbo-instruct"
-                        prompt = (
-                            f"Interpretate the results of the fitted data\n"
-                            f"{res}\n"
-                            f"Interpretation:"
-                        )
-                        response = openai.Completion.create(
-                            engine=model_engine,
-                            prompt=prompt,
-                            temperature=0,
-                            max_tokens=300,
-                            top_p=1.0,
-                            frequency_penalty=0.0,
-                            presence_penalty=0.0,
-                            stop=["#", ";"]
-                        )
-                        return response.choices[0].text.strip()
-                    st.subheader("Summary")
-                    st.write(interpretate_res(res))
+                        res = res_reg.summary()
+                        
+                        st.subheader("Summary")
+                        st.write(interpretate_res(res))
 
-                    st.header("Predict the target variable based on input features")
-                    X = df_num[[column for column in df_num.columns if column not in insignificant_variables and column!=target_variable]]
-                    Y = df_num[target_variable]
+                        st.header("Predict the target variable based on input features")
+                        X = df_num[[column for column in df_num.columns if column not in insignificant_variables and column!=target_variable]]
+                        Y = df_num[target_variable]
 
-                    from sklearn.model_selection import train_test_split
-                    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=random.randint(0,10000))
+                        X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=random.randint(0,10000))
 
-                    from sklearn.linear_model import LinearRegression
-                    from sklearn import metrics
-                    import numpy as np
-                    lm = LinearRegression()
-                    lm.fit(X_train,Y_train)
-                    predictions = lm.predict(X_test)
-                    df_pred = pd.DataFrame({'predictions':predictions, 'y test':Y_test})
-                    st.scatter_chart(data=df_pred,x='predictions',y='y test',color=colors[random.randint(0,len(colors))-1])
-                    latex = r'''
-                        ## Evaluation criteria for the regression model
-                        There are three evaluation criteria for regression problems:
+                        
+                        lm = LinearRegression()
+                        lm.fit(X_train,Y_train)
+                        predictions = lm.predict(X_test)
+                        df_pred = pd.DataFrame({'predictions':predictions, 'y test':Y_test})
+                        st.scatter_chart(data=df_pred,y='predictions',x='y test',color=colors[random.randint(0,len(colors))-1])
+                        latex = r'''
+                            ## Evaluation criteria for the regression model
+                            There are three evaluation criteria for regression problems:
 
-                        **Mean Absolute Error** (MAE) :
+                            **Mean Absolute Error** (MAE) :
 
-                        $$\frac 1n\sum_{i=1}^n|y_i-\hat{y}_i|$$
+                            $$\frac 1n\sum_{i=1}^n|y_i-\hat{y}_i|$$
 
-                        **Mean Squared Error** (MSE) :
+                            **Mean Squared Error** (MSE) :
 
-                        $$\frac 1n\sum_{i=1}^n(y_i-\hat{y}_i)^2$$
+                            $$\frac 1n\sum_{i=1}^n(y_i-\hat{y}_i)^2$$
 
-                        **Root Mean Squared Error** (RMSE) :
+                            **Root Mean Squared Error** (RMSE) :
 
-                        $$\sqrt{\frac 1n\sum_{i=1}^n(y_i-\hat{y}_i)^2}$$
+                            $$\sqrt{\frac 1n\sum_{i=1}^n(y_i-\hat{y}_i)^2}$$
 
-                        Comparaison de ces trois critères :
+                            Comparaison de ces trois critères :
 
-                        - **MAE** is the easiest to undesrtand because it's simply Mean Absolute Error.
-                        - **MSE** is more popular than MAE because MSE is more affected by the highest errors, which tends to be useful in practice.
-                        - **RMSE** is even more popular than MSE, because RMSE is interpretable by comparing it to the 'Y' values as they are in the same units.
+                            - **MAE** is the easiest to undesrtand because it's simply Mean Absolute Error.
+                            - **MSE** is more popular than MAE because MSE is more affected by the highest errors, which tends to be useful in practice.
+                            - **RMSE** is even more popular than MSE, because RMSE is interpretable by comparing it to the 'Y' values as they are in the same units.
 
-                        All these criteria are **loss functions** that we aim to minimize.
-                    '''
-                    st.write(latex)
-                    st.write(f'MAE: {metrics.mean_absolute_error(Y_test, predictions)}')
-                    st.write(f'MSE: {metrics.mean_squared_error(Y_test, predictions)}')
-                    st.write(f'RMSE: {np.sqrt(metrics.mean_squared_error(Y_test, predictions))}')
+                            All these criteria are **loss functions** that we aim to minimize.
+                        '''
+                        st.write(latex)
+                        st.write(f'MAE: {metrics.mean_absolute_error(Y_test, predictions)}')
+                        st.write(f'MSE: {metrics.mean_squared_error(Y_test, predictions)}')
+                        st.write(f'RMSE: {np.sqrt(metrics.mean_squared_error(Y_test, predictions))}')
 
-                    if res_reg.rsquared>0.8:
-                        st.subheader(f"since the model fit well the data we can use it to predict {target_variable} for new input variables")
-                        # df_num.column = st.columns(len(df_num.columns),gap="small")
-                        # dict_columns = {}
-                        # for column in df_num.columns:
-                        #     with column:
-                        #         input = st.text_input(column)
-                        with st.form("my_form"):
-                            # st.write("Inside the form")
-                            # slider_val = st.slider("Form slider")
-                            # checkbox_val = st.checkbox("Form checkbox")
+                        if res_reg.rsquared>0.8:
+                            st.subheader(f"since the model fit well the data we can use it to predict {target_variable} for new input variables")
+                            # df_num.column = st.columns(len(df_num.columns),gap="small")
+                            # dict_columns = {}
+                            # for column in df_num.columns:
+                            #     with column:
+                            #         input = st.text_input(column)
+                            with st.form("my_form"):
+                                # st.write("Inside the form")
+                                # slider_val = st.slider("Form slider")
+                                # checkbox_val = st.checkbox("Form checkbox")
 
-                            # Every form must have a submit button.
-                            inputs = {}
-                            for i in range(len(X.columns)):
-                                inputs[i] = st.number_input(f"Enter {X.columns[i]} : ")
-                            submitted = st.form_submit_button("Predict")
-                            if submitted:
-                                Y_pred = ((np.matrix(np.insert(list(inputs.values()),0,1)))).reshape(1,len(res_reg.params))*np.matrix(res_reg.params).reshape(len(res_reg.params),1)
-                                st.write(f"The predicted value of {target_variable} is : ") 
-                                st.code(f"{float(Y_pred)}", language="markdown")
+                                # Every form must have a submit button.
+                                inputs = {}
+                                for i in range(len(X.columns)):
+                                    inputs[i] = st.number_input(f"Enter {X.columns[i]} : ")
+                                submitted = st.form_submit_button("Predict")
+                                if submitted:
+                                    Y_pred = ((np.matrix(np.insert(list(inputs.values()),0,1)))).reshape(1,len(res_reg.params))*np.matrix(res_reg.params).reshape(len(res_reg.params),1)
+                                    st.write(f"The predicted value of {target_variable} is : ") 
+                                    st.code(f"{float(Y_pred)}", language="markdown")
 
 
 
