@@ -478,7 +478,7 @@ if st.session_state['Submit']:
 
 
                     else:
-                        columns=[column for column in df_num.columns if column!=target_variable and not math.isnan(df_num[column].corr(df_num[target_variable]))]
+                        columns=[column for column in df_num.columns if (column!=target_variable and abs(df_num[column].corr(df_num[target_variable]))>=0.4) and not math.isnan(df_num[column].corr(df_num[target_variable]))]
                         var = target_variable + " ~ " + ' + '.join(columns)
                         st.header(f"identifying the more significant features on {target_variable} using Ordinary Least Squares(OLS)")
                         linear_reg = smf.ols(var,data=df_num)
