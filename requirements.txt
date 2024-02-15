@@ -7,3 +7,4 @@ openpyxl
 statsmodels
 openai==0.28
 scikit-learn
+xgboost
