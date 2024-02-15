@@ -158,13 +158,13 @@ if st.session_state['Submit']:
                 if len(df_num)==0:
                     exit(0)
             #dup
-            st.write("<h2>Duplicates in the data</h2>",unsafe_allow_html=True)
-            if df_num.duplicated().sum()==0: st.write(f"there are no Duplicates in the data") 
-            else: 
-                st.write(f"{df_num.duplicated().sum()}")
-                df_num = df_num.drop_duplicates(ignore_index=True)
-                st.header("the data after modification : ")
-                st.write(df_num)
+            # st.write("<h2>Duplicates in the data</h2>",unsafe_allow_html=True)
+            # if df_num.duplicated().sum()==0: st.write(f"there are no Duplicates in the data") 
+            # else: 
+            #     st.write(f"{df_num.duplicated().sum()}")
+            #     df_num = df_num.drop_duplicates(ignore_index=True)
+            #     st.header("the data after modification : ")
+            #     st.write(df_num)
             # st.header("Bar chart of the data")
             # st.bar_chart(df_num)
             # for column in df_num.columns: 
