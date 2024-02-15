@@ -17,6 +17,21 @@ from sklearn import metrics
 import numpy as np
 import plotly.io as pio
 from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import KFold
+from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
+from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import Lasso
+from sklearn.linear_model import Ridge
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.ensemble import AdaBoostRegressor
+from sklearn.ensemble import BaggingRegressor
+from sklearn.ensemble import ExtraTreesRegressor
+from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.ensemble import RandomForestRegressor
+from xgboost import XGBRegressor
+from xgboost import XGBRFRegressor
 
 
 pio.templates.default = "plotly"
@@ -138,17 +153,46 @@ if st.session_state['Submit']:
             st.session_state['Edit'] = not st.session_state['Edit']
             df = st.data_editor(data=df,hide_index=True,num_rows='dynamic')
             # droping non numirecal columns
-            object_columns=[column for column in df.columns if df[column].dtype in ['object','datetime64[ns, UTC]']]
-            df_num = df.drop(columns=object_columns)
+            # object_columns=[column for column in df.columns if df[column].dtype in ['object','datetime64[ns, UTC]']]
+            # df_num = df.drop(columns=object_columns)
+            for column in df.columns:
+                if df[column].dtype in ['object','datetime64[ns, UTC]']:
+                    keys = df[column].unique()
+                    values = list(range(0,len(keys)))
+                    df[column].replace(dict(zip(keys, values)), inplace=True)
+            if 'x' in df.columns and 'y' in df.columns and 'z' in df.columns:
+                df['vol'] = df['x']*df['y']*df['z']
+                df.drop(columns=['x','y','z'],inplace=True)
+            df_num = df
+            st.header("converting categorical data into dummy variables")
+            st.write(df)
             #desc
             st.write("<h2>Description of the data</h2>",unsafe_allow_html=True)
             st.write(df.describe())
             #infos
             st.write("<h2>informations about the data</h2>",unsafe_allow_html=True)
+            def interpretate_infos(infos):
+                            model_engine = "gpt-3.5-turbo-instruct"
+                            prompt = (
+                                f"Interpretate the informations about the data\n"
+                                f"{infos}\n"
+                                f"Interpretation:"
+                            )
+                            response = openai.Completion.create(
+                                engine=model_engine,
+                                prompt=prompt,
+                                temperature=0,
+                                max_tokens=300,
+                                top_p=1.0,
+                                frequency_penalty=0.0,
+                                presence_penalty=0.0,
+                                stop=["#", ";"]
+                            )
+                            return response.choices[0].text.strip()
             buffer = io.StringIO()
             df.info(buf=buffer)
             s = buffer.getvalue()
-            st.text(s)
+            # st.write(interpretate_infos(s))
             if operator.countOf(df_num.isna().sum().values,0) != len(df_num.isna().sum().values):
                 st.header(f"deleting rows with missing values..")
                 st.write(pd.DataFrame(df_num.isna().sum()).rename(columns={0:"Number of missing values"}))
@@ -158,13 +202,13 @@ if st.session_state['Submit']:
                 if len(df_num)==0:
                     exit(0)
             #dup
-            # st.write("<h2>Duplicates in the data</h2>",unsafe_allow_html=True)
-            # if df_num.duplicated().sum()==0: st.write(f"there are no Duplicates in the data") 
-            # else: 
-            #     st.write(f"{df_num.duplicated().sum()}")
-            #     df_num = df_num.drop_duplicates(ignore_index=True)
-            #     st.header("the data after modification : ")
-            #     st.write(df_num)
+            st.write("<h2>Duplicates in the data</h2>",unsafe_allow_html=True)
+            if df_num.duplicated().sum()==0: st.write(f"there are no Duplicates in the data") 
+            else: 
+                st.write(f"{df_num.duplicated().sum()}")
+                df_num = df_num.drop_duplicates(ignore_index=True)
+                st.header("the data after modification : ")
+                st.write(df_num)
             # st.header("Bar chart of the data")
             # st.bar_chart(df_num)
             # for column in df_num.columns: 
@@ -180,7 +224,7 @@ if st.session_state['Submit']:
             # sns.heatmap(df_num.corr(), ax=ax,annot=True)
             # st.write(fig)
             st.write("<h2>Computing pairwise correlation of columns</h2>",unsafe_allow_html=True)
-            st.write(df_num.corr())
+            st.dataframe(df_num.corr(),use_container_width=True)
             # st.write("<h2>SCATTER PLOT</h2>",unsafe_allow_html=True)
             # var = list()
             
@@ -349,7 +393,7 @@ if st.session_state['Submit']:
                 
 
             st.header("Let us study your data!")
-            st.subheader("At the moment, it is only applicable to linear regression.")
+            st.subheader("applicable to regression and classification problems")
             target_variable = st.text_input("Enter your target variable","")
 
             if st.button("Send"):
@@ -366,16 +410,16 @@ if st.session_state['Submit']:
                     # st.write(val)
                     i=0
                     for key,value in val.items():
-                        if abs(value)<=0.2:
+                        if abs(value)<=0.1:
                             stat=True
                             st.info(f"we notice that there isn't a significant correlation between {key} and {target_variable} : {value} therefor the entry variable {key} doesn't explain the target variable so it's safe to remove it")
                             val = {df_num.corr()[key].index[i]: df_num.corr()[key].values[i] for i in range(len(df_num.corr()[key].values))}
-                            for key_sub,value1 in val.items():
-                                if key!=key_sub and abs(value1)>=0.4:
-                                    if i==0 : st.header(f"Computing pairwise correlation of {key} and the other columns")
-                                    i+=0
-                                    st.write(df_num.corr()[key])
-                                    st.info(f"there is significant correlation between {key} and {key_sub} : {value1} which means that the two entry variables contain same information so it's perferable to remove {key}")
+                            # for key_sub,value1 in val.items():
+                            #     if key!=key_sub and abs(value1)>=0.1:
+                            #         if i==0 : st.header(f"Computing pairwise correlation of {key} and the other columns")
+                            #         i+=0
+                            #         st.write(df_num.corr()[key])
+                            #         st.info(f"there is significant correlation between {key} and {key_sub} : {value1} which means that the two entry variables contain same information so it's perferable to remove {key}")
                     if not stat:
                         st.write("all variables explain the target value")
                     def interpretate_res(res):
@@ -411,8 +455,8 @@ if st.session_state['Submit']:
                                 Tab_anova=sm.stats.anova_lm(smf.ols('var ~ C(target)'.replace('var',column).replace("target",target_variable), data=df_num).fit(), typ=2)
                                 st.write(Tab_anova)
                                 
-                                pvalue = Tab_anova["PR(>F)"]['C(Clique)']
-                                dfreedom = Tab_anova["df"]['C(Clique)']
+                                pvalue = Tab_anova["PR(>F)"]['C(target)'.replace("target",target_variable)]
+                                dfreedom = Tab_anova["df"]['C(target)'.replace("target",target_variable)]
                                 if i==0 : st.info(f"It seem that your data has {int(dfreedom)+1} groups")
                                 i+=1
                                 if pvalue>=0.05:
@@ -434,25 +478,38 @@ if st.session_state['Submit']:
                         st.write(classifier.fit(X_Train, Y_Train))
                         Y_Pred = classifier.predict(X_Test)
                         # st.write(Y_Pred)
-                        st.header("Classification Report")
+                        st.header("Classification Report between Training and predicted values")
+                        
+                        st.dataframe(
+                            pd.DataFrame(metrics.classification_report(Y_Train,classifier.predict(X_Train),output_dict=True,target_names=["class i".replace("i",str(i)) for i in range(int(dfreedom)+1)])).transpose()
+                        )
+                        st.header("Classification Report between test and predicted values")
                         st.dataframe(
                             pd.DataFrame(metrics.classification_report(Y_Test,Y_Pred,output_dict=True,target_names=["class i".replace("i",str(i)) for i in range(int(dfreedom)+1)])).transpose()
                         )
+                        df_ytest = pd.DataFrame(Y_Test)
+                        for i in range(len(df_ytest[target_variable].unique())):
+                            st.info(f"class {df_ytest[target_variable].unique()[i]} appears {df_ytest[df_ytest[target_variable]==df_ytest[target_variable].unique()[i]][df_ytest.columns[0]].count()} times in the data")
                         # df_pred = pd.DataFrame({"predictions":Y_Pred,"Test":Y_Test})
                         # st.line_chart(data=df_pred,x='Test',y='predictions')
                         st.header("summary")
-                        st.write(interpretate_res(metrics.classification_report(Y_Test,Y_Pred)))
+                        # st.write(interpretate_res(metrics.classification_report(Y_Test,Y_Pred)))
+                        
+                        df_pred = pd.DataFrame({"predictions":Y_Pred,"Test":Y_Test})
+                        # st.scatter_chart(data=df_pred,y='predictions',x='Test',color=colors[random.randint(0,len(colors))-1])
+
                         st.header("Confusion Matrix")
                         cf_matrix = metrics.confusion_matrix(Y_Test, Y_Pred)
-                        group_names = ['True Neg','False Pos','False Neg','True Pos']
-                        group_counts = ["{0:0.0f}".format(value) for value in cf_matrix.flatten()]
-                        labels = [f"{v1}\n{v2}" for v1, v2 in zip(group_names,group_counts)]
-                        labels = np.asarray(labels).reshape(2,2)
-                        fig, ax = plt.subplots()
-                        sns.heatmap(cf_matrix,annot=labels,fmt='',ax=ax,cmap='Blues')
+                        # st.write(cf_matrix)
+                        # group_names = ['True Neg','False Pos','False Neg','True Pos']
+                        # group_counts = ["{0:0.0f}".format(value) for value in cf_matrix.flatten()]
+                        # labels = [f"{v1}\n{v2}" for v1, v2 in zip(group_names,group_counts)]
+                        # labels = np.asarray(labels).reshape(int(dfreedom)+1,int(dfreedom)+1)
+                        # fig, ax = plt.subplots()
+                        sns.heatmap(cf_matrix,annot=True,ax=ax,cmap='Blues')
                         st.pyplot(fig)
 
-                        if metrics.accuracy_score(Y_Test, Y_Pred)>0.8:
+                        if metrics.accuracy_score(Y_Test, Y_Pred)>0.7:
                             st.subheader(f"since the model fit well the data we can use it to predict {target_variable} for new input variables")
                             # df_num.column = st.columns(len(df_num.columns),gap="small")
                             # dict_columns = {}
@@ -467,19 +524,23 @@ if st.session_state['Submit']:
                                 # Every form must have a submit button.
                                 inputs = {}
                                 for i in range(len(X.columns)):
-                                    inputs[i] = st.number_input(f"Enter {X.columns[i]} : ")
+                                    inputs[i] = st.number_input(f"Enter {X.columns[i]} : ",format="%.6f")
                                 submitted = st.form_submit_button("Predict")
                                 if submitted:
                                     # st.write(inputs.values())
-                                    Y_pred = classifier.predict(np.array([list(inputs.values())]))
+                                    # params = classifier.coef_[0]
+                                    # params = np.insert(list(params),0,classifier.intercept_[0])
+                                    # pred = ((np.matrix(np.insert(list(inputs.values()),0,1)))).reshape(1,len(params))*np.matrix(params).reshape(len(params),1)
+                                    inputs = sc_X.fit_transform(np.array([list(inputs.values())]))
+                                    pred = classifier.predict(inputs)
                                     st.write(f"The predicted value of {target_variable} is : ") 
-                                    st.code(f"{int(Y_pred)}", language="markdown")
+                                    st.code(f"{pred}", language="markdown")
 
 
 
 
                     else:
-                        columns=[column for column in df_num.columns if (column!=target_variable and abs(df_num[column].corr(df_num[target_variable]))>=0.4) and not math.isnan(df_num[column].corr(df_num[target_variable]))]
+                        columns=[column for column in df_num.columns if (column!=target_variable and abs(df_num[column].corr(df_num[target_variable]))>=0.1) and not math.isnan(df_num[column].corr(df_num[target_variable]))]
                         var = target_variable + " ~ " + ' + '.join(columns)
                         st.header(f"identifying the more significant features on {target_variable} using Ordinary Least Squares(OLS)")
                         linear_reg = smf.ols(var,data=df_num)
@@ -534,10 +595,10 @@ if st.session_state['Submit']:
                         res = res_reg.summary()
                         
                         st.subheader("Summary")
-                        st.write(interpretate_res(res))
+                        # st.write(interpretate_res(res))
 
                         # st.header("Predict the target variable based on input features")
-                        X = df_num[[column for column in df_num.columns if column not in insignificant_variables and column!=target_variable]]
+                        X = df_num[[column for column in columns if column not in insignificant_variables and column!=target_variable]]
                         Y = df_num[target_variable]
 
                         sc_X = StandardScaler()
@@ -598,13 +659,84 @@ if st.session_state['Submit']:
                                 # Every form must have a submit button.
                                 inputs = {}
                                 for i in range(len(X.columns)):
-                                    inputs[i] = st.number_input(f"Enter {X.columns[i]} : ")
+                                    inputs[i] = st.number_input(f"Enter {X.columns[i]} : ",format="%.6f")
                                 submitted = st.form_submit_button("Predict")
                                 if submitted:
                                     Y_pred = ((np.matrix(np.insert(list(inputs.values()),0,1)))).reshape(1,len(res_reg.params))*np.matrix(res_reg.params).reshape(len(res_reg.params),1)
                                     st.write(f"The predicted value of {target_variable} is : ") 
                                     st.code(f"{float(Y_pred)}", language="markdown")
+                        Model = []
+                        RMSE = []
+                        MAE = []
+                        MSE = []
+                        R_Square = []
+                        adj_rsquared = []
+                        CV = []
+                        names = ["Linear Regression","Ridge Regression", "Lasso Regression",
+                                "Decision Tree Regressor", "Random Forest Regressor", "Gradient Boosting Regressor",
+                                "Adaboost Regressor", "BaggingRegressor", "ExtraTreesRegressor","XGBRegressor", "XGBRFRegressor"]
+                        models = [LinearRegression(), Ridge(), Lasso(), DecisionTreeRegressor(),
+                                RandomForestRegressor(), GradientBoostingRegressor(), 
+                                AdaBoostRegressor(), BaggingRegressor(), ExtraTreesRegressor(),XGBRegressor(), XGBRFRegressor()]
+                        def evaluate(true, predicted, variable_of_model):
+                            MAE.append(metrics.mean_absolute_error(true, predicted))
+                            MSE.append(metrics.mean_squared_error(true, predicted))
+                            RMSE.append(np.sqrt(metrics.mean_squared_error(true, predicted)))
+                            R_Square.append(metrics.r2_score(true, predicted))
+                            n= X_test.shape[0]
+                            p= X_test.shape[1] - 1
+                            adj_rsquared.append(1 - (1 - R_Square[-1]) * ((n - 1)/(n-p-1)))
+                            cv_accuracies = cross_val_score(estimator = variable_of_model, X = X_train, y = Y_train.ravel(), cv = 5,verbose = 1)
+                            CV.append(cv_accuracies.mean())
+                        def print_evaluate(true, predicted):  
+                            mae = metrics.mean_absolute_error(true, predicted)
+                            mse = metrics.mean_squared_error(true, predicted)
+                            rmse = np.sqrt(metrics.mean_squared_error(true, predicted))
+                            r2_square = metrics.r2_score(true, predicted)
+                            n= X_test.shape[0]
+                            p= X_test.shape[1] - 1
+                            adj_rsquared = 1 - (1 - r2_square) * ((n - 1)/(n-p-1))
+                            print("MAE:", mae)
+                            print("MSE:", mse)
+                            print("RMSE:", rmse)
+                            print("R2 Square", r2_square)
+                            print("adj R Square", adj_rsquared)
+                        def predict(variable_of_model):
+                            if R_Square[0]>0.8:
+                                st.subheader(f"since the model fit well the data we can use it to predict {target_variable} for new input variables")
+                                with st.form("my_form"):
+                                    inputs = {}
+                                    for i in range(len(X.columns)):
+                                        inputs[i] = st.number_input(f"Enter {X.columns[i]} : ")
+                                    submitted = st.form_submit_button("Predict")
+                                    if submitted:
+                                        Y_pred = variable_of_model.predict(np.array([list(inputs.values())]))
+                                        st.write(f"The predicted value of {target_variable} is : ") 
+                                        st.code(f"{float(Y_pred)}", language="markdown")
 
+                        def fit_and_predict(name, model):
+                            variable_of_model = model
+                            variable_of_model.fit(X_train, Y_train)
+                            pred = variable_of_model.predict(X_test)                            
+                            st.scatter_chart(data=pd.DataFrame({'predictions':variable_of_model.predict(X_test), 'y test':Y_test}),y='predictions',x='y test',color=colors[random.randint(0,len(colors))-1])
+                            evaluate(Y_test, pred, variable_of_model)
+                            
+
+                            evaluation_dataframe = pd.DataFrame({"Model": selected_model,
+                                        "MAE": MAE,
+                                        "MSE": MSE,
+                                        "RMSE": RMSE,
+                                        "R Squared": R_Square,
+                                        "adj R Squared": adj_rsquared,
+                                        "Cross Validation": CV})
+                            evaluation_dataframe = evaluation_dataframe.sort_values("adj R Squared")
+                            st.header("summary")
+
+                            st.dataframe(evaluation_dataframe,use_container_width=True,hide_index=True)
+                        st.header("Regressor models")
+                        selected_model = st.selectbox('choose the Regressor Model you want to use ',names)
+                        for name, model in zip(names, models):
+                                if name==selected_model: fit_and_predict(name, model)
 
 
         else:
