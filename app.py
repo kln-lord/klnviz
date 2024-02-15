@@ -16,6 +16,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn import metrics
 import numpy as np
 import plotly.io as pio
+from sklearn.preprocessing import StandardScaler
 
 
 pio.templates.default = "plotly"
@@ -367,7 +368,7 @@ if st.session_state['Submit']:
                     for key,value in val.items():
                         if abs(value)<=0.2:
                             stat=True
-                            st.info(f"we notice that there isn't a significant correlation between {key} and {target_variable} : {value} therefor the entry variable {key} doesn't explain the target variable")
+                            st.info(f"we notice that there isn't a significant correlation between {key} and {target_variable} : {value} therefor the entry variable {key} doesn't explain the target variable so it's safe to remove it")
                             val = {df_num.corr()[key].index[i]: df_num.corr()[key].values[i] for i in range(len(df_num.corr()[key].values))}
                             for key_sub,value1 in val.items():
                                 if key!=key_sub and abs(value1)>=0.4:
@@ -424,7 +425,7 @@ if st.session_state['Submit']:
                         X = df_num[[column for column in df_num.columns if column not in insi_columns and column!=target_variable]]
                         Y = df_num[target_variable]
                         X_Train, X_Test, Y_Train, Y_Test = train_test_split(X, Y, test_size = 0.25, random_state = 0)
-                        from sklearn.preprocessing import StandardScaler
+                        
                         sc_X = StandardScaler()
                         X_Train = sc_X.fit_transform(X_Train)
                         X_Test = sc_X.fit_transform(X_Test)
@@ -538,7 +539,8 @@ if st.session_state['Submit']:
                         st.header("Predict the target variable based on input features")
                         X = df_num[[column for column in df_num.columns if column not in insignificant_variables and column!=target_variable]]
                         Y = df_num[target_variable]
-
+                        scalar = StandardScaler()
+                        X = scalar.fit_transform(X)
                         X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=random.randint(0,10000))
 
                         
