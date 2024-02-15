@@ -536,19 +536,24 @@ if st.session_state['Submit']:
                         st.subheader("Summary")
                         st.write(interpretate_res(res))
 
-                        st.header("Predict the target variable based on input features")
+                        # st.header("Predict the target variable based on input features")
                         X = df_num[[column for column in df_num.columns if column not in insignificant_variables and column!=target_variable]]
                         Y = df_num[target_variable]
-                        scalar = StandardScaler()
-                        X = scalar.fit_transform(X)
-                        X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=random.randint(0,10000))
 
+                        sc_X = StandardScaler()
+                        
+                        X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=random.randint(0,10000))
+                        X_train = sc_X.fit_transform(X_train)
+                        X_test = sc_X.fit_transform(X_test)
                         
                         lm = LinearRegression()
                         lm.fit(X_train,Y_train)
                         predictions = lm.predict(X_test)
+                        Y_learn = lm.predict(X_train)
+                        df_learn = pd.DataFrame({'y train':Y_train, 'y learn':Y_learn})
                         df_pred = pd.DataFrame({'predictions':predictions, 'y test':Y_test})
                         st.scatter_chart(data=df_pred,y='predictions',x='y test',color=colors[random.randint(0,len(colors))-1])
+                        st.scatter_chart(data=df_learn,y='y train',x='y learn',color=colors[random.randint(0,len(colors))-1])
                         latex = r'''
                             ## Evaluation criteria for the regression model
                             There are three evaluation criteria for regression problems:
