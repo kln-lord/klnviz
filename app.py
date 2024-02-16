@@ -463,7 +463,7 @@ if st.session_state['Submit']:
                         st.header(f"Pair plot between the variables ")
                         st.subheader(f"after removing {', '.join(insi_columns)} ")
                         fig, ax = plt.subplots()
-                        sns.pairplot(df_num[[]],hue=target_variable,palette='bone').savefig("subplot")
+                        sns.pairplot(df_num[[column for column in df_num.columns if column not in insi_columns]],hue=target_variable,palette='bone').savefig("subplot")
                         st.image("subplot.png")
                         # aprentissage
                         st.header("Using support vector machine (SVM) algorithm")
