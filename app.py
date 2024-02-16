@@ -144,7 +144,7 @@ if st.session_state['Submit']:
             for column in df.columns:
                 if "unnamed" in column.lower(): df=df.drop(columns=[column])
                 if "id" in column.lower() : df=df.drop(columns=[column])
-
+            df_copy=df
             # displaying data
             st.write("<h2> your data : "+uploaded_file.name+"</h2>",unsafe_allow_html=True)
             st.write(df)
@@ -263,7 +263,7 @@ if st.session_state['Submit']:
                 st.session_state["histPlot"] = False
                 st.write("<h2>HeatMap<i> to show the correlation between the variables<i></h2>",unsafe_allow_html=True)
                 fig, ax = plt.subplots()
-                sns.heatmap(df_num.corr(), ax=ax,annot=True,cmap='bone')
+                sns.heatmap(df_copy._get_numeric_data().corr(), ax=ax,annot=True,cmap='bone')
                 st.write(fig)
                 
 
@@ -273,15 +273,7 @@ if st.session_state['Submit']:
                 st.session_state["barChart"] = not st.session_state["barChart"]
                 st.session_state["boxPlot"] = False
                 st.session_state["histPlot"] = False
-                # st.header("Bar chart of the data")
-                # var = list()
-                # i=0
-                # for column in df_num.columns:
-                #     st.subheader(f"Bar chart of {column}")
-                #     st.bar_chart(df_num[column],color=colors[random.randint(0,len(colors))-1])
-                # st.subheader(f"Bar chart of all variables")
-                # st.bar_chart(df_num)
-               # Do something...
+
 
             if scatterPlot_btn:
                 st.session_state["lineChart"] = False
@@ -289,17 +281,6 @@ if st.session_state['Submit']:
                 st.session_state["barChart"] = False
                 st.session_state["boxPlot"] = False
                 st.session_state["histPlot"] = False
-                
-                # st.write("<h2>Scatter Plot of each pair variables</h2>",unsafe_allow_html=True)
-                # var = list()
-                # i=0
-                # for column_1 in df_num.columns:
-                #     var.append(column_1)
-                #     for column_2 in df_num.columns:
-                #         if column_2 not in var:
-                #             st.subheader(f"Scatter plot of {column_2} and {column_1}")
-                #             st.scatter_chart(df_num,x=column_1,y=column_2,color=colors[random.randint(0,len(colors))-1])
-                #             i+=1
 
             if boxPlot_btn:
                 st.session_state["lineChart"] = False
@@ -307,19 +288,7 @@ if st.session_state['Submit']:
                 st.session_state["boxPlot"] = not st.session_state["boxPlot"]
                 st.session_state["barChart"] = False
                 st.session_state["histPlot"] = False
-                # var = list()
-                # for column_1 in df_num.columns:
-                #     var.append(column_1)
-                #     for column_2 in df_num.columns:
-                #             if column_2 not in var:
-                #                 st.subheader(f"Box plot of {column_2} and {column_1}")
-                #                 fig, ax = plt.subplots()
-                #                 st.write(fig)
-                # st.write("<h2>Box Plots of the Data</h2>",unsafe_allow_html=True)
-                # for column in df_num.columns:
-                #     st.subheader(f"Box plot of {column}")
-                #     fig = px.box(df_num,y=column,points="all")
-                #     st.plotly_chart(fig,theme="streamlit",use_container_width=True)
+
                     
             if lineChart_btn:
                 st.session_state["scatterPlot"] = False
@@ -327,17 +296,7 @@ if st.session_state['Submit']:
                 st.session_state["barChart"] = False
                 st.session_state["boxPlot"] = False
                 st.session_state["histPlot"] = False
-                # st.write("<h2>Line chart of each pair variables</h2>",unsafe_allow_html=True)
-                # var = list()
-                # i=0
-                # for column_1 in df_num.columns:
-                #     var.append(column_1)
-                #     for column_2 in df_num.columns:
-                #         if column_2 not in var:
-                #             st.subheader(f"Line plot of {column_2} and {column_1}")
-                #             st.line_chart(df_num,x=column_1,y=column_2,color=colors[random.randint(0,len(colors))-1])
-                # st.subheader(f"Line plot of all variables")
-                # st.line_chart(df_num)
+
             if histPlot_btn:
                 st.session_state["histPlot"] = not st.session_state["histPlot"]
                 st.session_state["scatterPlot"] = False
@@ -373,16 +332,7 @@ if st.session_state['Submit']:
                 st.subheader(f"Box plot of {column}")
                 fig = px.box(df_num,y=column,points="all",color_discrete_sequence=[colors[random.randint(0,len(colors))-1]])
                 st.plotly_chart(fig,theme="streamlit",use_container_width=True)
-            
-            # if st.session_state["jointPlot"]:
-            #     st.write("<h2>Joint Plot of the Data</h2>",unsafe_allow_html=True)
-            #     column_1 = st.selectbox('choose the variable x for the x axis : ',df_num.columns)
-            #     if column_1 is not None:
-            #         column_2 = st.selectbox('choose the variable for the y axis :',df_num.columns)
-            #         st.subheader(f"joint chart of {column_1} and {column_2}")
-            #         fig, ax = plt.subplots()
-            #         sns.histplot(x=column_1,y=column_2,data=df_num,color=colors[random.randint(0,len(colors))-1],ax=ax)
-            #         st.write(fig)
+
                 
             if st.session_state["histPlot"]:
                 st.write("<h2>Hist Plot of the Data</h2>",unsafe_allow_html=True)
@@ -477,7 +427,12 @@ if st.session_state['Submit']:
                         X_Test = sc_X.fit_transform(X_Test)
                         from sklearn.svm import SVC
                         classifier = SVC(kernel = 'linear', random_state = 0)
+                        #Train the model using the training sets
+
                         st.write(classifier.fit(X_Train, Y_Train))
+                        
+                        #Predict Y for new inputs
+
                         Y_Pred = classifier.predict(X_Test)
                         # st.write(Y_Pred)
                         st.header("Classification Report between Training and predicted values")
@@ -513,27 +468,15 @@ if st.session_state['Submit']:
 
                         if metrics.accuracy_score(Y_Test, Y_Pred)>0.7:
                             st.subheader(f"since the model fit well the data we can use it to predict {target_variable} for new input variables")
-                            # df_num.column = st.columns(len(df_num.columns),gap="small")
-                            # dict_columns = {}
-                            # for column in df_num.columns:
-                            #     with column:
-                            #         input = st.text_input(column)
-                            with st.form("my_form"):
-                                # st.write("Inside the form")
-                                # slider_val = st.slider("Form slider")
-                                # checkbox_val = st.checkbox("Form checkbox")
 
-                                # Every form must have a submit button.
+                            with st.form("my_form"):
+    
                                 inputs = {}
                                 for i in range(len(X.columns)):
                                     inputs[i] = st.number_input(f"Enter {X.columns[i]} : ",format="%.6f")
                                 submitted = st.form_submit_button("Predict")
                                 if submitted:
-                                    # st.write(inputs.values())
-                                    # params = classifier.coef_[0]
-                                    # params = np.insert(list(params),0,classifier.intercept_[0])
-                                    # pred = ((np.matrix(np.insert(list(inputs.values()),0,1)))).reshape(1,len(params))*np.matrix(params).reshape(len(params),1)
-                                    inputs = sc_X.fit_transform(np.array([list(inputs.values())]))
+                                    inputs = sc_X.transform(np.array([list(inputs.values())]))
                                     pred = classifier.predict(inputs)
                                     st.write(f"The predicted value of {target_variable} is : ") 
                                     st.code(f"{pred}", language="markdown")
