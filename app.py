@@ -263,7 +263,7 @@ if st.session_state['Submit']:
                 st.session_state["histPlot"] = False
                 st.write("<h2>HeatMap<i> to show the correlation between the variables<i></h2>",unsafe_allow_html=True)
                 fig, ax = plt.subplots()
-                sns.heatmap(df_num.corr(), ax=ax,annot=True)
+                sns.heatmap(df_num.corr(), ax=ax,annot=True,cmap='bone')
                 st.write(fig)
                 
 
