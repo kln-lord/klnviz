@@ -508,7 +508,7 @@ if st.session_state['Submit']:
                         # labels = [f"{v1}\n{v2}" for v1, v2 in zip(group_names,group_counts)]
                         # labels = np.asarray(labels).reshape(int(dfreedom)+1,int(dfreedom)+1)
                         # fig, ax = plt.subplots()
-                        sns.heatmap(cf_matrix,annot=True,ax=ax,cmap='Blues')
+                        sns.heatmap(cf_matrix,annot=True,ax=ax,cmap='bone')
                         st.pyplot(fig)
 
                         if metrics.accuracy_score(Y_Test, Y_Pred)>0.7:
