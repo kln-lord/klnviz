@@ -479,7 +479,7 @@ if st.session_state['Submit']:
                                     inputs = sc_X.transform(np.array([list(inputs.values())]))
                                     pred = classifier.predict(inputs)
                                     st.write(f"The predicted value of {target_variable} is : ") 
-                                    st.code(f"{pred}", language="markdown")
+                                    st.code(f"{int(pred)}", language="markdown")
 
 
 
