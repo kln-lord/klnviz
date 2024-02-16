@@ -192,7 +192,7 @@ if st.session_state['Submit']:
             buffer = io.StringIO()
             df.info(buf=buffer)
             s = buffer.getvalue()
-            # st.write(interpretate_infos(s))
+            st.write(interpretate_infos(s))
             if operator.countOf(df_num.isna().sum().values,0) != len(df_num.isna().sum().values):
                 st.header(f"deleting rows with missing values..")
                 st.write(pd.DataFrame(df_num.isna().sum()).rename(columns={0:"Number of missing values"}))
@@ -441,10 +441,7 @@ if st.session_state['Submit']:
                             )
                             return response.choices[0].text.strip()
                     if len(df_num[target_variable].unique())<=5:
-                        st.header(f"Pair plot between the variables : ")
-                        fig, ax = plt.subplots()
-                        sns.pairplot(df_num,hue=target_variable,palette='bwr').savefig("subplot")
-                        st.image("subplot.png")
+                        
                         i = 0;
                         dfreedom=0
                         st.header(f"ANOVA Test: ")
@@ -463,6 +460,11 @@ if st.session_state['Submit']:
                                     insi_columns.append(column)
                                     st.info(f"The p-value : {pvalue} associated with the F-statistic indicates that there is not enough evidence to suggest that there are significant differences between the means of the groups. In other words, the groups are not statistically significantly different from each other in terms of the variable {column} and it's safe to not include it while learning")
                         
+                        st.header(f"Pair plot between the variables ")
+                        st.subheader(f"after removing {', '.join(insi_columns)} ")
+                        fig, ax = plt.subplots()
+                        sns.pairplot(df_num[[]],hue=target_variable,palette='bone').savefig("subplot")
+                        st.image("subplot.png")
                         # aprentissage
                         st.header("Using support vector machine (SVM) algorithm")
                         st.subheader("to classify the data by finding the optimal decision boundary that maximally separates different classes.")
@@ -493,7 +495,7 @@ if st.session_state['Submit']:
                         # df_pred = pd.DataFrame({"predictions":Y_Pred,"Test":Y_Test})
                         # st.line_chart(data=df_pred,x='Test',y='predictions')
                         st.header("summary")
-                        # st.write(interpretate_res(metrics.classification_report(Y_Test,Y_Pred)))
+                        st.write(interpretate_res(metrics.classification_report(Y_Test,Y_Pred)))
                         
                         df_pred = pd.DataFrame({"predictions":Y_Pred,"Test":Y_Test})
                         # st.scatter_chart(data=df_pred,y='predictions',x='Test',color=colors[random.randint(0,len(colors))-1])
