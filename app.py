@@ -443,8 +443,8 @@ if st.session_state['Submit']:
                     if len(df_num[target_variable].unique())<=5:
                         st.header(f"Pair plot between the variables : ")
                         fig, ax = plt.subplots()
-                        # sns.pairplot(df_num,hue=target_variable,palette='bwr').savefig("subplot")
-                        # st.image("subplot.png")
+                        sns.pairplot(df_num,hue=target_variable,palette='bwr').savefig("subplot")
+                        st.image("subplot.png")
                         i = 0;
                         dfreedom=0
                         st.header(f"ANOVA Test: ")
