@@ -540,7 +540,7 @@ if st.session_state['Submit']:
                         res = res_reg.summary()
                         
                         st.subheader("Summary")
-                        # st.write(interpretate_res(res))
+                        st.write(interpretate_res(res))
 
                         # st.header("Predict the target variable based on input features")
                         X = df_num[[column for column in columns if column not in insignificant_variables and column!=target_variable]]
