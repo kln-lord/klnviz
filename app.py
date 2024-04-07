@@ -37,7 +37,7 @@ from xgboost import XGBRFRegressor
 pio.templates.default = "plotly"
 
 
-openai.api_key="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"
+openai.api_key="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"
 st.set_page_config(page_title="Ahmed Bendrioua | Vis", layout="wide",page_icon="favicon.png")
 # st.session_state.theme="light"
 streamlit.config.set_option("theme.base","light")
