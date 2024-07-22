@@ -36,8 +36,9 @@ from xgboost import XGBRFRegressor
 
 pio.templates.default = "plotly"
 
+# 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
 
-openai.api_key="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"
+openai.api_key="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"
 st.set_page_config(page_title="Ahmed Bendrioua | Vis", layout="wide",page_icon="favicon.png")
 # st.session_state.theme="light"
 streamlit.config.set_option("theme.base","light")
@@ -192,7 +193,7 @@ if st.session_state['Submit']:
             buffer = io.StringIO()
             df.info(buf=buffer)
             s = buffer.getvalue()
-            st.write(interpretate_infos(s))
+            # st.write(interpretate_infos(s))
             if operator.countOf(df_num.isna().sum().values,0) != len(df_num.isna().sum().values):
                 st.header(f"deleting rows with missing values..")
                 st.write(pd.DataFrame(df_num.isna().sum()).rename(columns={0:"Number of missing values"}))
@@ -450,7 +451,7 @@ if st.session_state['Submit']:
                         # df_pred = pd.DataFrame({"predictions":Y_Pred,"Test":Y_Test})
                         # st.line_chart(data=df_pred,x='Test',y='predictions')
                         st.header("summary")
-                        st.write(interpretate_res(metrics.classification_report(Y_Test,Y_Pred)))
+                        # st.write(interpretate_res(metrics.classification_report(Y_Test,Y_Pred)))
                         
                         df_pred = pd.DataFrame({"predictions":Y_Pred,"Test":Y_Test})
                         # st.scatter_chart(data=df_pred,y='predictions',x='Test',color=colors[random.randint(0,len(colors))-1])
