@@ -39,7 +39,7 @@ pio.templates.default = "plotly"
 # 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
 
 openai.api_key="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"
-st.set_page_config(page_title="Ahmed Bendrioua | Vis", layout="wide",page_icon="favicon.png")
+st.set_page_config(page_title="Klnviz - visualize and discover the story behind your data", layout="wide",page_icon="favicon.png")
 # st.session_state.theme="light"
 streamlit.config.set_option("theme.base","light")
 streamlit.config.set_option('server.enableXsrfProtection', False)
@@ -73,7 +73,7 @@ st.markdown("""
                 .e116k4er1:hover{background-color:black !important;}
         </style>
 """,unsafe_allow_html=True)
-st.title('Vis - visualize and discover the story behind your data')
+st.title('Klnviz - visualize and discover the story behind your data')
 st.write('<h6>Made by Ahmed Bendrioua</h6>',unsafe_allow_html=True)
 
 uploaded_file = st.file_uploader("Load your data",accept_multiple_files=False,type=["csv", "json","xlsx"])
