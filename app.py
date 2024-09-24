@@ -41,7 +41,7 @@ pio.templates.default = "plotly"
 openai.api_key="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"
 st.set_page_config(page_title="Klnviz - visualize and discover the story behind your data", layout="wide",page_icon="favicon.png")
 # st.session_state.theme="light"
-streamlit.config.set_option("theme.base","light")
+streamlit.config.set_option("theme.base","dark")
 streamlit.config.set_option('server.enableXsrfProtection', False)
 streamlit.config.set_option('server.enableCORS', False)
 # .ea3mdgi8{background-color: #181818;}
