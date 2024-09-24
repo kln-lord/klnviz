@@ -49,6 +49,7 @@ streamlit.config.set_option('server.enableCORS', False)
 #                 .st-emotion-cache-19rxjzo{background-color: rgb(40 40 40);}
 st.markdown("""
         <style>
+                .viewerBadge_container__r5tak{display:none;}
                 .ea3mdgi8{background-color: #111;}
                 .st-emotion-cache-1erivf3{background-color: #111;}
                 .ef3psqc12{background-color: #111;}
