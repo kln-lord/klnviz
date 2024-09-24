@@ -49,7 +49,7 @@ streamlit.config.set_option('server.enableCORS', False)
 #                 .st-emotion-cache-19rxjzo{background-color: rgb(40 40 40);}
 st.markdown("""
         <style>
-                .viewerBadge_container__r5tak{display:none;}
+                .st-emotion-cache-19rxjzo:hover{border-color:#3ddf70;color:#3ddf70}
                 .ea3mdgi8{background-color: #111;}
                 .st-emotion-cache-1erivf3{background-color: #111;}
                 .ef3psqc12{background-color: #111;}
@@ -80,7 +80,7 @@ st.markdown("""
 st.title('Klnviz - visualize and discover the story behind your data')
 st.write('<h6>Made by Ahmed Bendrioua</h6>',unsafe_allow_html=True)
 
-uploaded_file = st.file_uploader("Load your data",accept_multiple_files=False,type=["csv", "json","xlsx"])
+uploaded_file = st.file_uploader("",accept_multiple_files=False,type=["csv", "json","xlsx"])
 
 colors = [
                 "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
