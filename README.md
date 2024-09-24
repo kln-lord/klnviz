@@ -11,12 +11,15 @@
 
 ## How to Run
 1. Clone the repository:
+   
    ```bash
    git clone https://github.com/yourusername/klnviz.git
-2. Install the required dependencies:
+3. Install the required dependencies:
+   
    ```bash
    pip install -r requirements.txt
 3.Run the Streamlit app:
+
   ```bash
   streamlit run app.py
    
