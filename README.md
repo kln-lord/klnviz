@@ -2,6 +2,11 @@
 
 **klnviz** is an app that allows users to visualize, predict, modify, and extract knowledge from their data. It offers detailed analyses and modeling for regression and classification tasks, all within an intuitive web interface.
 
+<h3 align="center">
+    🐉 Try it out here: <a href="https://yourkln.com/klnviz">klnvis 🐉 </a>
+</h3>
+
+
 ## Features
 - **Data Visualization**: Generate interactive visualizations for better insights.
 - **Predictive Modeling**: Easily perform regression and classification tasks.
