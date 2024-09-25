@@ -49,7 +49,7 @@ streamlit.config.set_option('server.enableCORS', False)
 #                 .st-emotion-cache-19rxjzo{background-color: rgb(40 40 40);}
 st.markdown("""
         <style>
-                .stProgress .st-bo {background-color: #3ddf70;}
+                .st-bn {background-color: #3ddf70;}
                 .st-emotion-cache-19rxjzo:focus:not(:active) {border-color:#3ddf70;color:#3ddf70;background-color:#111}
                 .st-emotion-cache-19rxjzo:active{border-color:#3ddf70;color:#3ddf70;background-color:#111}
                 .st-emotion-cache-19rxjzo:hover{border-color:#3ddf70;color:#3ddf70}
